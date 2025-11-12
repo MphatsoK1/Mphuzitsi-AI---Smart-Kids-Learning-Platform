@@ -1,0 +1,216 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Splash Screen</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', 'Roboto', sans-serif;
+      background-color: #f9f9f9;
+      overflow-x: hidden;
+    }
+    .slide {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .slide.active {
+      display: flex;
+    }
+    .image-placeholder {
+      width: 200px;
+      height: 200px;
+      margin: 20px 0;
+    }
+    .footer {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mx-auto">
+    <!-- New Slide: Product of Qore AI -->
+    <div class="slide active" style="background-color: black; color: white;">
+      <div class="image-placeholder">
+        <img src="{% static 'logo1.png' %}" alt="Qore AI">
+      </div>
+      <h1 class="text-2xl font-bold mt-4">Qore AI</h1>
+      <p class="text-sm text-light-600 mt-2">INNOVATE . DEVELOP . IMPLEMENT</p>
+      <div class="mt-4 text-blue-500">••••</div>
+    </div>
+    <!-- Existing Slide 1: Welcome to Qore Tutor -->
+    <div class="slide">
+      <button class="text-2xl font-bold text-gray-800 absolute top-4 left-4">&lt;</button>
+      <div class="image-placeholder">
+        <img src="{% static 'wel.png' %}" alt="">
+      </div>
+      <h1 class="text-2xl font-bold mt-4">Welcome to Qore Tutor</h1>
+      <p class="text-sm text-gray-600 mt-2">Your smart learning companion that makes education fun and exciting. Let’s start your adventure together!</p>
+      <div class="mt-4 text-blue-500">••••</div>
+    </div>
+    <!-- Existing Slide 2: Learn Through Play -->
+    <div class="slide">
+      <button class="text-2xl font-bold text-gray-800 absolute top-4 left-4">&lt;</button>
+      <div class="image-placeholder">
+        <img src="{% static 'geek-pride-day-concept-with-game-controller.png' %}" alt="">
+      </div>
+      <h1 class="text-2xl font-bold mt-4">Learn Through Play!</h1>
+      <p class="text-sm text-gray-600 mt-2">Practice reading, writing, and vocabulary with exciting games designed just for you. Every game helps you grow smarter!</p>
+      <div class="mt-4 text-blue-500">••••</div>
+    </div>
+    <!-- Existing Slide 3: Earn Rewards & Grow -->
+    <div class="slide">
+      <button class="text-2xl font-bold text-gray-800 absolute top-4 left-4">&lt;</button>
+      <div class="image-placeholder">
+        <img src="{% static 'winner-background-rendering.png' %}" alt="">
+      </div>
+      <h1 class="text-2xl font-bold mt-4">Earn Rewards & Grow!</h1>
+      <p class="text-sm text-gray-600 mt-2">Collect stars, unlock achievements, and watch your learning skills improve every day. Your learning journey is filled with exciting rewards!</p>
+      <div class="mt-4 text-blue-500">••••</div>
+    </div>
+  </div>
+  <div class="footer">
+    <button id="skipButton" class="text-blue-500 text-sm">Skip</button>
+    <button id="nextButton" class="bg-blue-500 text-white px-6 py-2 rounded-lg text-sm">Next</button>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const nextButton = document.querySelector('#nextButton');
+    const skipButton = document.querySelector('#skipButton');
+    const backButton = document.querySelectorAll('.slide button');
+    let currentSlide = 0;
+
+    function showSlide(index) {
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === index);
+      });
+      // Show/hide footer based on slide
+      document.querySelector('.footer').style.display = index === 0 ? 'none' : 'flex';
+      // Update "Next" button text to "Get Started" on the last slide
+      if (index === slides.length - 1) {
+        nextButton.textContent = 'Get Started';
+      } else {
+        nextButton.textContent = 'Next';
+      }
+    }
+
+    // Auto-advance from first slide (Product of Qore AI) after 3 seconds
+    setTimeout(() => {
+      if (currentSlide === 0) {
+        currentSlide = 1;
+        showSlide(currentSlide);
+      }
+    }, 3000);
+
+    nextButton.addEventListener('click', () => {
+      if (currentSlide === slides.length - 1) {
+        // Redirect to login page on the last slide
+        window.location.href = '{% url "login" %}';
+      } else {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+      }
+    });
+
+    skipButton.addEventListener('click', () => {
+      // Redirect to login page when Skip is clicked
+      window.location.href = '{% url "login" %}';
+    });
+
+    backButton.forEach(button => {
+      button.addEventListener('click', () => {
+        if (currentSlide > 1) { // Prevent going back to first slide
+          currentSlide--;
+          showSlide(currentSlide);
+        }
+      });
+    });
+
+    // Initial display
+    showSlide(currentSlide);
+
+    // Existing mobile app behavior script
+    document.addEventListener('touchstart', function (event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    let lastTouchStart = 0;
+    document.addEventListener('touchstart', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchStart <= 300) {
+        event.preventDefault();
+      }
+      lastTouchStart = now;
+    }, false);
+
+    document.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+    }, false);
+
+    document.addEventListener('selectstart', function (e) {
+      e.preventDefault();
+    }, false);
+
+    document.addEventListener('touchstart', function (e) {
+      const timer = setTimeout(() => {
+        e.preventDefault();
+      }, 500);
+      e.target.addEventListener('touchend', () => {
+        clearTimeout(timer);
+      }, { once: true });
+    }, { passive: false });
+
+    document.documentElement.style.scrollBehavior = 'smooth';
+
+    document.addEventListener('touchmove', function (e) {
+      if (e.touches.length > 1) return;
+      const top = window.pageYOffset === 0;
+      const bottom = window.innerHeight + window.pageYOffset >= document.body.scrollHeight;
+      if (top && e.touches[0].clientY > 10) {
+        e.preventDefault();
+      } else if (bottom && e.touches[0].clientY < window.innerHeight - 10) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    function vibrate(duration) {
+      if (navigator.vibrate) {
+        navigator.vibrate(duration || 50);
+      }
+    }
+
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        vibrate(50);
+      });
+    });
+
+    console.log('Mobile app behaviors applied: No zoom, no context menus, smooth interactions.');
+  </script>
+</body>
+</html>

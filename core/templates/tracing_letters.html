@@ -1,0 +1,562 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tracing Letters</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'Poppins', 'Roboto', sans-serif; 
+      background-color: #f9f9f9; 
+      overflow-x: hidden; 
+    }
+    .tracing-area { 
+      width: 300px; 
+      height: 300px; 
+      border: 3px solid #ff9800; 
+      background-color: #fff3e0; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      margin: 20px auto; 
+      position: relative; 
+      border-radius: 10px;
+    }
+    .letter-solid {
+      font-size: 200px; 
+      font-weight: 900;
+      color: #4caf50;
+      font-family: Arial, sans-serif;
+      position: absolute;
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    .letter-solid.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .canvas, .dotted-canvas { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      z-index: 2;
+      cursor: crosshair;
+    }
+    .dotted-canvas {
+      z-index: 1;
+      pointer-events: none;
+    }
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      z-index: 9999;
+      animation: confetti-fall 2s linear forwards;
+    }
+    @keyframes confetti-fall {
+      to {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+    .success-message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px 50px;
+      border-radius: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 10000;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: all 0.5s ease;
+    }
+    .success-message.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    .bx {
+      font-size: 1.5rem;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-start min-h-screen p-4">
+  <div class="w-full max-w-md">
+    <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-lg shadow">
+      <h1 class="text-xl font-bold text-teal-600"><i class='bx bx-pencil'></i> Tracing Letters</h1>
+      <span class="text-sm text-gray-600 font-semibold" id="timer">03:00</span>
+    </div>
+    <div class="bg-blue-100 p-3 rounded-lg mb-4 flex justify-between items-center">
+      <span class="text-sm text-blue-800 font-semibold"><i class='bx bx-book'></i> Learn to Write</span>
+      <span class="text-sm text-gray-700 font-semibold" id="score"><i class='bx bx-check-circle'></i> Letters: 0</span>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow mb-4">
+      <p class="text-purple-600 text-lg mb-4 font-bold text-center" id="letter-display">Trace letter: A</p>
+      <div class="tracing-area">
+        <canvas class="dotted-canvas" id="dottedCanvas"></canvas>
+        <span class="letter-solid" id="solidLetter">A</span>
+        <canvas class="canvas" id="tracingCanvas"></canvas>
+      </div>
+      <p class="text-center text-sm text-gray-500 mt-2">Follow the dots to trace the letter</p>
+    </div>
+    <div class="flex justify-between w-full mb-4">
+      <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg text-sm font-semibold transition shadow" id="try-again-btn"><i class='bx bx-refresh'></i> Try Again</button>
+      <button class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg text-sm font-semibold transition shadow" id="next-letter-btn"><i class='bx bx-right-arrow-alt'></i> Next Letter</button>
+    </div>
+    <div class="flex justify-between w-full">
+      <button class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg text-sm font-semibold transition shadow" id="hint-btn"><i class='bx bx-bulb'></i> Hint</button>
+      <button class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-semibold transition shadow" id="finish-btn"><i class='bx bx-flag'></i> Finish</button>
+      <button class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg text-sm font-semibold transition shadow" id="sound-btn"><i class='bx bx-volume-full'></i> Sound</button>
+    </div>
+  </div>
+  
+  <div class="success-message" id="successMessage">🎉 Perfect! 🎉</div>
+
+  <script>
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let soundEnabled = true;
+    
+    // Create audio elements (you'll need to replace these URLs with actual audio file URLs)
+    const yaySound = new Audio('{% static "yay.mp3" %}');
+    const bgMusic = new Audio('{% static "s.mp3" %}');
+    bgMusic.loop = true;
+    bgMusic.volume = 0.4;
+
+    function playBackgroundMusic() {
+      if (!soundEnabled) return;
+      bgMusic.play().catch(e => console.error('Background music failed to play:', e));
+    }
+
+    function stopBackgroundMusic() {
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
+    }
+
+    function playYaySound() {
+      if (!soundEnabled) return;
+      yaySound.currentTime = 0;
+      yaySound.play().catch(e => console.error('Yay sound failed to play:', e));
+    }
+
+    function playSound(frequency, duration, type = 'sine') {
+      if (!soundEnabled) return;
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.value = frequency;
+      oscillator.type = type;
+      gainNode.gain.value = 0.3;
+      oscillator.start();
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      oscillator.stop(audioContext.currentTime + duration);
+    }
+
+    function playClickSound() {
+      playSound(523, 0.1, 'square');
+    }
+
+    function playErrorSound() {
+      playSound(200, 0.2, 'sawtooth');
+      setTimeout(() => playSound(150, 0.2, 'sawtooth'), 200);
+    }
+
+    function speak(text) {
+      if (!soundEnabled) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.2;
+      speechSynthesis.speak(utterance);
+    }
+
+    function vibrate(duration) {
+      if (navigator.vibrate) {
+        navigator.vibrate(duration || 50);
+      }
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    function sendScore(finalScore) {
+      const csrftoken = getCookie('csrftoken');
+      let milestone = '';
+      if (finalScore >= 10) {
+        milestone = 'Alphabet Expert';
+      } else if (finalScore >= 5) {
+        milestone = 'Letter Tracer';
+      }
+      console.log('Score:', finalScore, 'Milestone:', milestone);
+    }
+
+    function createConfetti() {
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * window.innerWidth + 'px';
+        confetti.style.top = '-10px';
+        confetti.style.backgroundColor = ['#f44336', '#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#ffeb3b'][Math.floor(Math.random() * 6)];
+        confetti.style.animationDelay = Math.random() * 0.3 + 's';
+        confetti.style.width = (Math.random() * 10 + 5) + 'px';
+        confetti.style.height = (Math.random() * 10 + 5) + 'px';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 2000);
+      }
+    }
+
+    const canvas = document.getElementById('tracingCanvas');
+    const ctx = canvas.getContext('2d');
+    const dottedCanvas = document.getElementById('dottedCanvas');
+    const dottedCtx = dottedCanvas.getContext('2d');
+    const solidLetter = document.getElementById('solidLetter');
+    const letterDisplay = document.getElementById('letter-display');
+    const scoreDisplay = document.getElementById('score');
+    const timerDisplay = document.getElementById('timer');
+    const successMessage = document.getElementById('successMessage');
+    
+    let currentLetter = 'A';
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let isTracing = false;
+    let score = 0;
+    let timer = 180;
+    let gameActive = true;
+    let drawnPixels = [];
+    let hasCompletedLetter = false;
+
+    canvas.width = 300;
+    canvas.height = 300;
+    dottedCanvas.width = 300;
+    dottedCanvas.height = 300;
+
+    function drawDottedLetter(letter) {
+      dottedCtx.clearRect(0, 0, dottedCanvas.width, dottedCanvas.height);
+      dottedCtx.font = '200px Arial';
+      dottedCtx.textAlign = 'center';
+      dottedCtx.textBaseline = 'middle';
+      
+      const x = dottedCanvas.width / 2;
+      const y = dottedCanvas.height / 2;
+      
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = dottedCanvas.width;
+      tempCanvas.height = dottedCanvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.font = '200px Arial';
+      tempCtx.textAlign = 'center';
+      tempCtx.textBaseline = 'middle';
+      tempCtx.fillText(letter, x, y);
+      
+      const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+      const data = imageData.data;
+      
+      dottedCtx.fillStyle = '#ff9800';
+      const dotSpacing = 10;
+      const dotSize = 5;
+      for (let i = 0; i < tempCanvas.width; i += dotSpacing) {
+        for (let j = 0; j < tempCanvas.height; j += dotSpacing) {
+          const index = (j * tempCanvas.width + i) * 4;
+          if (data[index + 3] > 0) {
+            dottedCtx.beginPath();
+            dottedCtx.arc(i, j, dotSize, 0, Math.PI * 2);
+            dottedCtx.fill();
+          }
+        }
+      }
+    }
+
+    // Initialize game
+    let audioInitialized = false;
+    drawDottedLetter(currentLetter);
+    
+    // Initialize audio on first user interaction
+    function initializeAudio() {
+      if (audioInitialized) return;
+      audioInitialized = true;
+      speak('Welcome to Tracing Letters! Follow the dots to trace each letter. Good luck!');
+      playBackgroundMusic();
+    }
+    
+    // Add click listener to start audio
+    document.body.addEventListener('click', initializeAudio, { once: true });
+    document.body.addEventListener('touchstart', initializeAudio, { once: true });
+
+    const timerInterval = setInterval(() => {
+      if (timer > 0 && gameActive) {
+        timer--;
+        const minutes = Math.floor(timer / 60);
+        const seconds = timer % 60;
+        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      } else if (timer <= 0) {
+        gameActive = false;
+        clearInterval(timerInterval);
+        stopBackgroundMusic();
+        playErrorSound();
+        vibrate(300);
+        speak(`Time is up! You traced ${score} letters correctly.`);
+        alert(`⏰ Game Over! You traced ${score} letters correctly.`);
+        sendScore(score);
+      }
+    }, 1000);
+
+    function getLetterPattern(letter) {
+      const patterns = {
+        'A': [{x: 150, y: 80, w: 80, h: 140}],
+        'B': [{x: 100, y: 80, w: 100, h: 140}],
+        'C': [{x: 120, y: 80, w: 100, h: 140}],
+        'D': [{x: 100, y: 80, w: 100, h: 140}],
+        'E': [{x: 100, y: 80, w: 100, h: 140}],
+        'F': [{x: 100, y: 80, w: 100, h: 140}],
+        'G': [{x: 120, y: 80, w: 100, h: 140}],
+        'H': [{x: 100, y: 80, w: 100, h: 140}],
+        'I': [{x: 130, y: 80, w: 40, h: 140}],
+        'J': [{x: 120, y: 80, w: 80, h: 140}],
+        'K': [{x: 100, y: 80, w: 100, h: 140}],
+        'L': [{x: 100, y: 80, w: 100, h: 140}],
+        'M': [{x: 100, y: 80, w: 100, h: 140}],
+        'N': [{x: 100, y: 80, w: 100, h: 140}],
+        'O': [{x: 110, y: 80, w: 80, h: 140}],
+        'P': [{x: 100, y: 80, w: 100, h: 140}],
+        'Q': [{x: 110, y: 80, w: 80, h: 150}],
+        'R': [{x: 100, y: 80, w: 100, h: 140}],
+        'S': [{x: 110, y: 80, w: 80, h: 140}],
+        'T': [{x: 100, y: 80, w: 100, h: 140}],
+        'U': [{x: 100, y: 80, w: 100, h: 140}],
+        'V': [{x: 100, y: 80, w: 100, h: 140}],
+        'W': [{x: 90, y: 80, w: 120, h: 140}],
+        'X': [{x: 100, y: 80, w: 100, h: 140}],
+        'Y': [{x: 100, y: 80, w: 100, h: 140}],
+        'Z': [{x: 100, y: 80, w: 100, h: 140}]
+      };
+      return patterns[letter] || [{x: 100, y: 80, w: 100, h: 140}];
+    }
+
+    function checkIfInLetterArea(x, y) {
+      const patterns = getLetterPattern(currentLetter);
+      for (let pattern of patterns) {
+        if (x >= pattern.x && x <= pattern.x + pattern.w &&
+            y >= pattern.y && y <= pattern.y + pattern.h) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function checkCompletion() {
+      let validPixels = 0;
+      for (let pixel of drawnPixels) {
+        if (checkIfInLetterArea(pixel.x, pixel.y)) {
+          validPixels++;
+        }
+      }
+      return validPixels >= 50;
+    }
+
+    function startTracing(x, y) {
+      if (!gameActive || hasCompletedLetter) return;
+      isTracing = true;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    function trace(x, y) {
+      if (!gameActive || !isTracing || hasCompletedLetter) return;
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#2196f3';
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      drawnPixels.push({x: Math.floor(x), y: Math.floor(y)});
+      if (drawnPixels.length % 10 === 0 && checkCompletion()) {
+        completeTracing();
+      }
+    }
+
+    function endTracing() {
+      if (!gameActive || !isTracing) return;
+      isTracing = false;
+      ctx.closePath();
+    }
+
+    function completeTracing() {
+      if (hasCompletedLetter) return;
+      hasCompletedLetter = true;
+      score++;
+      scoreDisplay.innerHTML = `<i class='bx bx-check-circle'></i> Letters: ${score}`;
+      solidLetter.classList.add('show');
+      successMessage.textContent = `🎉 Perfect ${currentLetter}! 🎉`;
+      successMessage.classList.add('show');
+      createConfetti();
+      playYaySound();
+      vibrate(100);
+      speak(`Correct! Letter ${currentLetter} traced perfectly!`);
+      setTimeout(() => {
+        successMessage.classList.remove('show');
+      }, 2000);
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousedown', (e) => {
+      startTracing(e.offsetX, e.offsetY);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      trace(e.offsetX, e.offsetY);
+    });
+
+    canvas.addEventListener('mouseup', endTracing);
+    canvas.addEventListener('mouseleave', endTracing);
+
+    // Touch events for mobile
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      startTracing(touch.clientX - rect.left, touch.clientY - rect.top);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      trace(touch.clientX - rect.left, touch.clientY - rect.top);
+    });
+
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      endTracing();
+    });
+
+    document.getElementById('next-letter-btn').addEventListener('click', () => {
+      if (!gameActive) return;
+      playClickSound();
+      vibrate(50);
+      if (!hasCompletedLetter) {
+        playErrorSound();
+        vibrate(200);
+        speak('Please complete tracing the current letter first!');
+        alert('⚠️ Please complete tracing the current letter first!');
+        return;
+      }
+      const currentIndex = alphabet.indexOf(currentLetter);
+      if (currentIndex < alphabet.length - 1) {
+        currentLetter = alphabet[currentIndex + 1];
+        solidLetter.textContent = currentLetter;
+        letterDisplay.textContent = `Trace letter: ${currentLetter}`;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawDottedLetter(currentLetter);
+        solidLetter.classList.remove('show');
+        hasCompletedLetter = false;
+        drawnPixels = [];
+      } else {
+        playYaySound();
+        vibrate([100, 50, 100, 50, 100]);
+        speak('Congratulations! You completed all letters!');
+        alert('🎊 You completed all letters! Amazing job!');
+        gameActive = false;
+        clearInterval(timerInterval);
+        stopBackgroundMusic();
+        sendScore(score);
+      }
+    });
+
+    document.getElementById('try-again-btn').addEventListener('click', () => {
+      if (!gameActive) return;
+      playClickSound();
+      vibrate(50);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      solidLetter.classList.remove('show');
+      hasCompletedLetter = false;
+      drawnPixels = [];
+    });
+
+    document.getElementById('hint-btn').addEventListener('click', () => {
+      if (!gameActive) return;
+      playClickSound();
+      vibrate(50);
+      speak(`Try to trace letter ${currentLetter}. Follow the orange dots from top to bottom!`);
+      alert(`💡 Hint: Trace carefully over the orange dots of letter ${currentLetter}. Follow the dots from top to bottom!`);
+    });
+
+    document.getElementById('finish-btn').addEventListener('click', () => {
+      if (!gameActive) return;
+      playClickSound();
+      vibrate(50);
+      gameActive = false;
+      clearInterval(timerInterval);
+      stopBackgroundMusic();
+      playErrorSound();
+      vibrate(300);
+      speak(`Game finished! You traced ${score} letters correctly. Great work!`);
+      alert(`🏁 Game Finished! You traced ${score} letters correctly. Great work!`);
+      sendScore(score);
+    });
+
+    document.getElementById('sound-btn').addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('sound-btn');
+      btn.innerHTML = soundEnabled ? "<i class='bx bx-volume-full'></i> Sound" : "<i class='bx bx-volume-mute'></i> Muted";
+      if (soundEnabled) {
+        playBackgroundMusic();
+      } else {
+        stopBackgroundMusic();
+      }
+      playClickSound();
+      vibrate(50);
+    });
+
+    // Mobile app behaviors
+    document.addEventListener('touchstart', function (event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    document.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+    }, false);
+
+    document.addEventListener('selectstart', function (e) {
+      e.preventDefault();
+    }, false);
+
+    document.documentElement.style.scrollBehavior = 'smooth';
+  </script>
+</body>
+</html>

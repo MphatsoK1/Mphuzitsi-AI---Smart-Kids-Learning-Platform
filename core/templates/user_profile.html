@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - Learning App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Load Poppins as primary font, Maria as secondary -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/maria-2" rel="stylesheet">
+  
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  
+  <style>
+    /* Poppins as primary font for body */
+    body {
+      font-family: 'Poppins', 'Maria', sans-serif;
+      overflow: hidden; /* Prevent body scrollbar */
+    }
+    
+    /* Maria for decorative elements */
+    .font-maria {
+      font-family: 'Maria', 'Poppins', sans-serif;
+    }
+    
+    /* Poppins for consistent UI */
+    .font-poppins {
+      font-family: 'Poppins', 'Maria', sans-serif;
+    }
+    
+    /* Typography styles */
+    .heading-primary {
+      font-family: 'Poppins', 'Maria', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    
+    .heading-secondary {
+      font-family: 'Poppins', 'Maria', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .btn {
+      font-family: 'Poppins', 'Maria', sans-serif;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .icon-shadow {
+      box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 
+                  -2px -2px 4px rgba(0, 0, 0, 0.2), 
+                  3px 3px 6px rgba(0, 0, 0, 0.1), 
+                  -3px -3px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .content-container {
+      padding-bottom: 5rem; /* Increased to ensure content clears bottom nav */
+      overflow-y: auto; /* Enable vertical scrolling */
+      height: calc(100vh - 4rem); /* Account for bottom nav height */
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      .heading-primary {
+        font-size: 1.125rem;
+      }
+      .content-container {
+        padding-bottom: 4rem; /* Adjust for smaller screens */
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-poppins">
+  <div class="content-container p-3">
+    <!-- Profile Header -->
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center">
+        <img src="{% static 'avatars/58509042_9439833.jpg'%}" alt="Profile" class="rounded-full mr-2" style="width: 48px;">
+        <div>
+          <p class="text-red-500 font-maria font-bold text-base">Hello, {{ user.username }} 👋🏻</p>
+          <p class="text-gray-600 text-xs font-poppins">Your learning journey</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Stats -->
+    <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 rounded-lg mb-3">
+      <h2 class="font-maria heading-primary mb-2">Your Stats</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="text-center">
+          <p class="text-xs font-poppins uppercase text-gray-200">Level</p>
+          <p class="font-maria text-lg font-bold">{{ user_stats.level }}</p>
+        </div>
+        <div class="text-center">
+          <p class="text-xs font-poppins uppercase text-gray-200">Points</p>
+          <p class="font-maria text-lg font-bold">{{ user_stats.points }}</p>
+        </div>
+        <div class="text-center">
+          <p class="text-xs font-poppins uppercase text-gray-200">Games Played</p>
+          <p class="font-maria text-lg font-bold">{{ user_stats.games_played }}</p>
+        </div>
+        <div class="text-center">
+          <p class="text-xs font-poppins uppercase text-gray-200">Quizzes Taken</p>
+          <p class="font-maria text-lg font-bold">{{ user_stats.quizzes_taken }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="mb-3">
+      <h2 class="font-maria heading-primary mb-2">Recent Activities</h2>
+      <div class="space-y-3">
+        {% for activity in recent_activities %}
+          <div class="bg-white p-3 rounded-lg flex items-center border border-gray-200">
+            <div class="w-12 h-12 flex items-center justify-center rounded-full icon-shadow mr-3 bg-{{ activity.color }}-200 flex-shrink-0">
+              <svg class="w-6 h-6 text-{{ activity.color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                {{ activity.icon|safe }}
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm font-maria font-bold">{{ activity.title }}</p>
+              <p class="text-xs font-poppins text-gray-600">{{ activity.score }}</p>
+              <p class="text-xs font-poppins text-gray-500">{{ activity.timestamp|date:"M d, Y H:i" }}</p>
+            </div>
+          </div>
+        {% empty %}
+          <div class="bg-white p-3 rounded-lg text-center border border-gray-200">
+            <p class="text-sm font-poppins text-gray-600">No recent activities yet. Start playing to track your progress!</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Edit Profile and Logout Buttons -->
+    <div class="text-center mb-3">
+      <!-- <a href="" class="inline-flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg btn">
+        <i class='bx bx-edit mr-2'></i>
+        <span>Edit Profile</span>
+      </a> -->
+      <a href="{% url 'logout' %}" class="inline-flex items-center bg-red-500 text-white px-4 py-2 rounded-lg btn ml-2">
+        <i class='bx bx-log-out mr-2'></i>
+        <span>Logout</span>
+      </a>
+    </div>
+  </div>
+
+  {% include 'bottom_nav.html' %}
+</body>
+</html>

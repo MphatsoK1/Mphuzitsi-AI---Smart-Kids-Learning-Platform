@@ -1,0 +1,112 @@
+   {% load static %}
+   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+<style>
+  .fab {
+    position: fixed;
+    bottom: 4rem; /* Reduced from 6.5rem for a more compact placement */
+    right: 0.5rem; /* Reduced from 1rem */
+    z-index: 50;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Slightly reduced shadow for proportionality */
+  }
+</style>
+<a href="{% url 'artificial_intelligence' %}" class="fab bg-white-500 rounded-full p-2 shadow-lg"> <!-- Reduced padding from p-3 to p-2 -->
+  <img src="https://assets-v2.lottiefiles.com/a/5b038ad2-4fd1-11ef-8f43-075ce7e78c34/KmGwB3OYAI.gif" style="width: 40px;" alt="Robot" class="flex-shrink-0"> <!-- Reduced width from 60px to 40px -->
+</a>
+  <div class="fixed bottom-0 left-0 right-0 bg-white p-2 flex justify-around text-gray-600 border-t border-gray-200">
+    <a href="{% url 'home' %}" class="flex flex-col items-center hover:text-black text-xs font-poppins py-2">
+      <i class='bx bx-home text-xl mb-1'></i>
+      <span class="text-xs">Home</span>
+    </a>
+    <!-- <a href="{% url 'artificial_intelligence' %}" class="flex flex-col items-center hover:text-black text-xs font-poppins py-2">
+      <i class='bx bx-star text-xl mb-1'></i>
+      <span class="text-xs">AI</span>
+    </a> -->
+    <a href="{% url 'games_page' %}" class="flex flex-col items-center hover:text-black text-xs font-poppins py-2">
+      <i class='bx bx-joystick text-xl mb-1'></i>
+      <span class="text-xs">Games</span>
+    </a>
+
+    <a href="{% url 'profile' %}" class="flex flex-col items-center hover:text-black text-xs font-poppins py-2">
+      <i class='bx bx-user text-xl mb-1'></i>
+      <span class="text-xs">Profile</span>
+    </a>
+  </div>
+  <script>
+  /**
+ * JavaScript to make web app behave like an Android app:
+ * - Restrict zooming in/out (disable pinch zoom)
+ * - Prevent light/long clicks from triggering browser context menus
+ * - Ensure smooth scrolling without restrictions
+ */
+
+// 1. Restrict zooming in/out - Prevent pinch zoom
+// Reinforce with JS (assuming meta tag is set: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">)
+document.addEventListener('touchstart', function (event) {
+  if (event.touches.length > 1) {
+    event.preventDefault(); // Prevent multi-touch gestures like pinch zoom
+  }
+}, { passive: false });
+
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+  const now = (new Date()).getTime();
+  if (now - lastTouchEnd <= 300) { // Double-tap detection
+    event.preventDefault();
+  }
+  lastTouchEnd = now;
+}, false);
+
+let lastTouchStart = 0;
+document.addEventListener('touchstart', function (event) {
+  const now = (new Date()).getTime();
+  if (now - lastTouchStart <= 300) { // Double-tap
+    event.preventDefault();
+  }
+  lastTouchStart = now;
+}, false);
+
+// 2. Prevent light/long clicks from triggering browser context menus
+document.addEventListener('contextmenu', function (e) {
+  e.preventDefault();
+}, false);
+
+document.addEventListener('selectstart', function (e) {
+  e.preventDefault();
+}, false);
+
+document.addEventListener('touchstart', function (e) {
+  const timer = setTimeout(() => {
+    e.preventDefault();
+  }, 500); // 500ms long press
+
+  e.target.addEventListener('touchend', () => {
+    clearTimeout(timer);
+  }, { once: true });
+}, { passive: false });
+
+// 3. Ensure smooth scrolling (no restrictions)
+document.documentElement.style.scrollBehavior = 'smooth';
+
+// Remove all scrolling prevention logic
+// (Previously included touchmove event listener removed)
+
+// Optional: Add haptic feedback simulation
+function vibrate(duration) {
+  if (navigator.vibrate) {
+    navigator.vibrate(duration || 50);
+  }
+}
+
+document.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    vibrate(50); // Short vibration on tap
+  });
+});
+
+console.log('Mobile app behaviors applied: No zoom, no context menus, smooth scrolling.');
+  </script>

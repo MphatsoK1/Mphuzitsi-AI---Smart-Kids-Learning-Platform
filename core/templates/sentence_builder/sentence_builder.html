@@ -1,0 +1,678 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Poppins', 'Roboto', sans-serif;
+        }
+        .word-box {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin: 4px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+        }
+        .word-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+        }
+        .word-box.selected {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            transform: scale(0.95);
+        }
+        .sentence-area {
+            min-height: 80px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 3px dashed #f59e0b;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .sentence-area.active {
+            background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%);
+            border-color: #3b82f6;
+        }
+        .feedback-correct {
+            color: #10b981;
+            font-weight: bold;
+            animation: bounce 0.5s ease;
+        }
+        .feedback-wrong {
+            color: #ef4444;
+            font-weight: bold;
+            animation: shake 0.5s ease;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 9999;
+            animation: confetti-fall 2s linear forwards;
+        }
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.7);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .difficulty-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .difficulty-easy { background: #d1fae5; color: #065f46; }
+        .difficulty-medium { background: #fef3c7; color: #92400e; }
+        .difficulty-hard { background: #fee2e2; color: #991b1b; }
+        .difficulty-expert { background: #e0e7ff; color: #3730a3; }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="max-w-2xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center mb-4 sm:mb-6">
+            <a href="{% url 'games_page' %}" class="text-gray-600 hover:text-gray-800 mr-3 sm:mr-4">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">Sentence Builder</h1>
+            <div class="ml-auto text-sm text-gray-600">
+                Level <span id="current-level">1</span>
+            </div>
+        </div>
+
+        <!-- Game Info Card -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4">
+            <!-- Title Row -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center text-blue-500">
+                    <span class="text-2xl sm:text-3xl mr-2">📝</span>
+                    <span class="font-semibold text-base sm:text-lg">Sentence Builder</span>
+                </div>
+                <div class="text-sm sm:text-base text-gray-600 font-medium">
+                    <span id="sentences-completed">0</span>/<span id="sentences-required">3</span>
+                </div>
+            </div>
+
+            <!-- AI Buddy Header -->
+            <div class="bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl p-4 flex items-center justify-between text-white shadow-md">
+                <div class="flex items-center flex-1">
+                    <span class="text-3xl sm:text-4xl mr-3">📔</span>
+                    <div>
+                        <div class="font-bold text-base sm:text-lg">AI Buddy Grammar!</div>
+                        <div class="text-xs sm:text-sm opacity-90">Build correct sentences</div>
+                    </div>
+                </div>
+                <div class="text-right ml-4">
+                    <div class="text-xs sm:text-sm opacity-90">Score:</div>
+                    <div class="font-bold text-2xl sm:text-3xl" id="score">0</div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-4">
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Level Progress</span>
+                    <span id="progress-text">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="level-progress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer & Difficulty -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 flex items-center justify-between">
+            <div class="flex items-center text-orange-500">
+                <i class='bx bx-time text-xl mr-2'></i>
+                <span class="font-semibold" id="timer">03:00</span>
+            </div>
+            <div class="difficulty-badge" id="difficulty-badge">Easy</div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4 flex-1">
+            <p class="text-center text-gray-600 text-sm font-medium mb-4">
+                Drag words to build the correct sentence
+            </p>
+            
+            <div class="sentence-area mb-6" id="sentence-area">
+                <span class="text-gray-400 text-sm">Click words below to build sentence here</span>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-2" id="word-bank">
+                <!-- Words will be dynamically generated here -->
+            </div>
+            
+            <p class="text-sm mt-4 text-center min-h-6" id="feedback"></p>
+        </div>
+
+        <!-- Buddy's Tip -->
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-4 flex items-start shadow-sm border border-blue-100">
+            <span class="text-3xl sm:text-4xl mr-3 flex-shrink-0">📔</span>
+            <div>
+                <div class="font-bold text-gray-800 mb-1 text-sm sm:text-base">Buddy's Tip:</div>
+                <div class="text-xs sm:text-sm text-gray-600" id="tip">Start with capital letters and end with proper punctuation!</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex gap-3">
+            <button onclick="useHint()" class="flex-1 bg-gradient-to-r from-orange-400 to-orange-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                <i class='bx bx-bulb'></i> Hint
+            </button>
+            <button onclick="clearSentence()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                <i class='bx bx-reset'></i> Clear
+            </button>
+            <button onclick="checkSentence()" class="flex-1 bg-gradient-to-r from-green-400 to-green-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                <i class='bx bx-check-circle'></i> Check
+            </button>
+        </div>
+    </div>
+
+    <!-- Level Complete Modal -->
+    <div id="level-complete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2" id="modal-title">Level Complete!</h2>
+            <p class="text-gray-600 mb-4" id="modal-message">Great job building sentences!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-blue-500" id="modal-score">0</div>
+                    <div class="text-sm text-gray-600">Score</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-green-500" id="modal-sentences">0</div>
+                    <div class="text-sm text-gray-600">Sentences</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-purple-500" id="modal-perfect">0</div>
+                    <div class="text-sm text-gray-600">Perfect</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-orange-500" id="modal-accuracy">0%</div>
+                    <div class="text-sm text-gray-600">Accuracy</div>
+                </div>
+            </div>
+            
+            <button onclick="nextLevel()" class="w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                Continue to Next Level
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Complete Modal -->
+    <div id="game-complete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4">🏆</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Game Complete!</h2>
+            <p class="text-gray-600 mb-4">Amazing! You've completed all levels!</p>
+            
+            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-4 mb-6 text-white">
+                <div class="text-3xl font-bold" id="final-score">0</div>
+                <div class="text-sm">Final Score</div>
+            </div>
+            
+            <button onclick="restartGame()" class="w-full bg-gradient-to-r from-green-400 to-green-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition mb-3">
+                Play Again
+            </button>
+            <button onclick="exitGame()" class="w-full bg-gray-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                Exit Game
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="correct-sound" src="{% static 'sounds/correct.mp3' %}"></audio>
+    <audio id="wrong-sound" src="{% static 'sounds/wrong.mp3' %}"></audio>
+    <audio id="level-complete-sound" src="{% static 'sounds/level-complete.mp3' %}"></audio>
+
+    <script>
+        // Game state
+        let currentLevel = 1;
+        let currentSentenceIndex = 0;
+        let sentences = [];
+        let selectedWords = [];
+        let score = 0;
+        let sentencesCompleted = 0;
+        let perfectSentences = 0;
+        let totalAttempts = 0;
+        let correctAttempts = 0;
+        let timer = 180;
+        let gameActive = false;
+        let sessionId = null;
+        let soundEnabled = true;
+
+        // DOM elements
+        const elements = {
+            score: document.getElementById('score'),
+            timer: document.getElementById('timer'),
+            sentenceArea: document.getElementById('sentence-area'),
+            wordBank: document.getElementById('word-bank'),
+            feedback: document.getElementById('feedback'),
+            currentLevel: document.getElementById('current-level'),
+            sentencesCompleted: document.getElementById('sentences-completed'),
+            sentencesRequired: document.getElementById('sentences-required'),
+            levelProgress: document.getElementById('level-progress'),
+            progressText: document.getElementById('progress-text'),
+            difficultyBadge: document.getElementById('difficulty-badge'),
+            tip: document.getElementById('tip')
+        };
+
+        // Audio elements
+        const correctSound = document.getElementById('correct-sound');
+        const wrongSound = document.getElementById('wrong-sound');
+        const levelCompleteSound = document.getElementById('level-complete-sound');
+
+        // Generate session ID
+        function generateSessionId() {
+            return 'sentence_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Initialize game
+        async function initGame() {
+            sessionId = generateSessionId();
+            
+            // Start game session
+            await fetch('/api/sentence-builder/start-session/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    player_name: '{{ request.user.username|default:"Player" }}'
+                })
+            });
+            
+            loadLevel(1);
+        }
+
+        // Load level
+        async function loadLevel(level) {
+            try {
+                const response = await fetch(`/api/sentence-builder/level/?level=${level}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showGameComplete();
+                    return;
+                }
+                
+                currentLevel = data.level_number;
+                sentences = data.sentences;
+                currentSentenceIndex = 0;
+                sentencesCompleted = 0;
+                timer = data.time_limit;
+                
+                // Update UI
+                elements.currentLevel.textContent = currentLevel;
+                elements.sentencesRequired.textContent = data.sentences_required;
+                elements.difficultyBadge.textContent = data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
+                elements.difficultyBadge.className = `difficulty-badge difficulty-${data.difficulty}`;
+                
+                updateProgress();
+                generateSentence();
+                startTimer();
+                gameActive = true;
+                
+            } catch (error) {
+                console.error('Error loading level:', error);
+            }
+        }
+
+        // Generate current sentence
+        function generateSentence() {
+            if (currentSentenceIndex >= sentences.length) {
+                levelComplete();
+                return;
+            }
+            
+            const sentence = sentences[currentSentenceIndex];
+            selectedWords = [];
+            elements.sentenceArea.innerHTML = '<span class="text-gray-400 text-sm">Click words below to build sentence here</span>';
+            elements.sentenceArea.classList.remove('active');
+            elements.wordBank.innerHTML = '';
+            elements.feedback.textContent = '';
+            
+            // Create word boxes
+            sentence.scrambled.forEach((word, index) => {
+                const wordBox = document.createElement('div');
+                wordBox.className = 'word-box';
+                wordBox.textContent = word;
+                wordBox.dataset.index = index;
+                wordBox.addEventListener('click', () => selectWord(wordBox, word));
+                elements.wordBank.appendChild(wordBox);
+            });
+            
+            // Update tip
+            updateTip();
+        }
+
+        // Select word
+        function selectWord(wordBox, word) {
+            if (!gameActive) return;
+            
+            if (wordBox.parentNode === elements.wordBank) {
+                // Remove placeholder
+                const placeholder = elements.sentenceArea.querySelector('span.text-gray-400');
+                if (placeholder) placeholder.remove();
+                
+                wordBox.classList.add('selected');
+                elements.sentenceArea.appendChild(wordBox);
+                elements.sentenceArea.classList.add('active');
+                selectedWords.push(word);
+            } else {
+                wordBox.classList.remove('selected');
+                elements.wordBank.appendChild(wordBox);
+                selectedWords = selectedWords.filter(w => w !== word);
+                
+                if (selectedWords.length === 0) {
+                    elements.sentenceArea.innerHTML = '<span class="text-gray-400 text-sm">Click words below to build sentence here</span>';
+                    elements.sentenceArea.classList.remove('active');
+                }
+            }
+        }
+
+        // Check sentence
+        function checkSentence() {
+            if (!gameActive || selectedWords.length === 0) return;
+            
+            totalAttempts++;
+            const userSentence = selectedWords.join(' ');
+            const correctSentence = sentences[currentSentenceIndex].correct;
+            
+            if (userSentence === correctSentence) {
+                // Correct
+                correctAttempts++;
+                sentencesCompleted++;
+                score += 10;
+                perfectSentences++;
+                
+                elements.feedback.innerHTML = '<span class="feedback-correct">✓ Perfect! Correct sentence!</span>';
+                playSound(correctSound);
+                createConfetti();
+                
+                setTimeout(() => {
+                    currentSentenceIndex++;
+                    updateProgress();
+                    generateSentence();
+                }, 1500);
+                
+            } else {
+                // Incorrect
+                elements.feedback.innerHTML = '<span class="feedback-wrong">✗ Try again! Check the word order.</span>';
+                playSound(wrongSound);
+            }
+            
+            updateProgress();
+        }
+
+        // Use hint
+        function useHint() {
+            if (!gameActive) return;
+            
+            const firstWord = sentences[currentSentenceIndex].correct.split(' ')[0];
+            elements.feedback.innerHTML = `<span class="text-blue-500">💡 Hint: The sentence starts with "${firstWord}"</span>`;
+            speak(`Hint: The sentence starts with ${firstWord}`);
+        }
+
+        // Clear sentence
+        function clearSentence() {
+            if (!gameActive) return;
+            
+            const wordsInSentence = Array.from(elements.sentenceArea.querySelectorAll('.word-box'));
+            wordsInSentence.forEach(wordBox => {
+                wordBox.classList.remove('selected');
+                elements.wordBank.appendChild(wordBox);
+            });
+            
+            selectedWords = [];
+            elements.sentenceArea.innerHTML = '<span class="text-gray-400 text-sm">Click words below to build sentence here</span>';
+            elements.sentenceArea.classList.remove('active');
+            elements.feedback.textContent = '';
+        }
+
+        // Update progress
+        function updateProgress() {
+            elements.score.textContent = score;
+            elements.sentencesCompleted.textContent = sentencesCompleted;
+            
+            const progress = (sentencesCompleted / parseInt(elements.sentencesRequired.textContent)) * 100;
+            elements.levelProgress.style.width = `${progress}%`;
+            elements.progressText.textContent = `${Math.round(progress)}%`;
+        }
+
+        // Update tip
+        function updateTip() {
+            const tips = [
+                "Remember to start with a capital letter!",
+                "Look for the subject and verb first!",
+                "Pay attention to word order!",
+                "Read your sentence aloud to check!",
+                "Watch for punctuation at the end!"
+            ];
+            elements.tip.textContent = tips[Math.floor(Math.random() * tips.length)];
+        }
+
+        // Timer
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                if (timer > 0 && gameActive) {
+                    timer--;
+                    const minutes = Math.floor(timer / 60);
+                    const seconds = timer % 60;
+                    elements.timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else if (timer <= 0 && gameActive) {
+                    clearInterval(timerInterval);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function timeUp() {
+            gameActive = false;
+            elements.feedback.innerHTML = '<span class="feedback-wrong">⏰ Time\'s up! Level completed.</span>';
+            setTimeout(levelComplete, 2000);
+        }
+
+        // Level complete
+        function levelComplete() {
+            gameActive = false;
+            playSound(levelCompleteSound);
+            
+            // Update progress in backend
+            updateGameProgress();
+            
+            const accuracy = totalAttempts > 0 ? Math.round((correctAttempts / totalAttempts) * 100) : 0;
+            
+            document.getElementById('modal-score').textContent = score;
+            document.getElementById('modal-sentences').textContent = sentencesCompleted;
+            document.getElementById('modal-perfect').textContent = perfectSentences;
+            document.getElementById('modal-accuracy').textContent = accuracy + '%';
+            
+            document.getElementById('level-complete-modal').classList.add('active');
+        }
+
+        // Next level
+        async function nextLevel() {
+            document.getElementById('level-complete-modal').classList.remove('active');
+            
+            // Check if next level exists
+            const response = await fetch(`/api/sentence-builder/next-level/?current_level=${currentLevel}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                showGameComplete();
+            } else {
+                loadLevel(currentLevel + 1);
+            }
+        }
+
+        // Show game complete
+        function showGameComplete() {
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('game-complete-modal').classList.add('active');
+        }
+
+        // Restart game
+        function restartGame() {
+            document.getElementById('game-complete-modal').classList.remove('active');
+            score = 0;
+            perfectSentences = 0;
+            totalAttempts = 0;
+            correctAttempts = 0;
+            initGame();
+        }
+
+        // Exit game
+        function exitGame() {
+            window.location.href = "{% url 'games_page' %}";
+        }
+
+        // Update game progress in backend
+        async function updateGameProgress() {
+            await fetch('/api/sentence-builder/update-progress/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    level: currentLevel,
+                    score: score,
+                    sentences_completed: sentencesCompleted,
+                    perfect_sentences: perfectSentences,
+                    total_attempts: totalAttempts,
+                    correct_attempts: correctAttempts,
+                    time_spent: 180 - timer
+                })
+            });
+        }
+
+        // Utility functions
+        function playSound(audioElement) {
+            if (soundEnabled) {
+                audioElement.currentTime = 0;
+                audioElement.play().catch(e => console.log('Audio play failed:', e));
+            }
+        }
+
+        function speak(text) {
+            if (soundEnabled && 'speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8;
+                utterance.pitch = 1.2;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][Math.floor(Math.random() * 5)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>

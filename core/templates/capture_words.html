@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Word Capture Adventure</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Fredoka', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      overflow-x: hidden;
+      position: relative;
+      padding-bottom: 80px;
+      min-height: 100vh;
+    }
+    
+    .star-bg {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite;
+    }
+    
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+    
+    .word {
+      min-width: 90px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      margin: 6px;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 700;
+      font-size: 16px;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      border: 3px solid transparent;
+      position: relative;
+    }
+    
+    .word:hover {
+      transform: scale(1.05) rotate(2deg);
+    }
+    
+    .word:active {
+      transform: scale(0.95);
+    }
+    
+    .captured {
+      opacity: 0.5;
+      pointer-events: none;
+      filter: grayscale(0.5);
+      animation: captureAnim 0.5s;
+    }
+    
+    @keyframes captureAnim {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2) rotate(10deg); }
+      100% { transform: scale(1); }
+    }
+    
+    .wrong-capture {
+      animation: shake 0.5s;
+      border-color: #ef4444;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    
+    .word {
+      background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+      color: white;
+    }
+    
+    .captured-words {
+      min-height: 60px;
+      border: 3px dashed #c4b5fd;
+      border-radius: 12px;
+      padding: 10px;
+      margin: 10px 0;
+      background: rgba(255,255,255,0.9);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .captured-word-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      margin: 4px;
+      background: linear-gradient(135deg, #86efac, #4ade80);
+      color: white;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      animation: popIn 0.3s;
+    }
+    
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .game-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      margin-bottom: 12px;
+      padding: 16px;
+      animation: slideIn 0.5s;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .timer-danger {
+      animation: timerBlink 0.5s infinite;
+      color: #dc2626 !important;
+    }
+    
+    @keyframes timerBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 20px;
+      max-width: 90%;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      animation: modalPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    
+    @keyframes modalPop {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    .trophy {
+      font-size: 80px;
+      animation: trophyBounce 1s ease-in-out infinite;
+    }
+    
+    @keyframes trophyBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    .progress-ring {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 16px;
+    }
+    
+    .progress-ring-circle {
+      transition: stroke-dashoffset 0.5s ease;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+    
+    .instruction-step {
+      background: #f3f4f6;
+      padding: 12px;
+      border-radius: 12px;
+      margin: 8px 0;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .instruction-icon {
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: 16px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+    }
+    
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      z-index: 1000;
+      animation: fall 3s linear;
+    }
+    
+    @keyframes fall {
+      0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+    
+    .voice-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background: #22c55e;
+      border-radius: 50%;
+      margin-left: 8px;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-3">
+
+  <!-- Star Background -->
+  <div class="star-bg" id="starBg"></div>
+
+  <div class="content-wrapper">
+    
+    <!-- Tutorial Modal -->
+    <div id="tutorialModal" class="modal active">
+      <div class="modal-content">
+        <div class="text-6xl mb-4">🎮</div>
+        <h2 class="text-2xl font-bold text-purple-600 mb-4">Welcome to Word Capture!</h2>
+        
+        <div class="space-y-3 mb-6">
+          <div class="instruction-step">
+            <div class="instruction-icon">👆</div>
+            <div class="text-left">
+              <strong class="text-purple-600">Step 1:</strong>
+              <p class="text-sm">Tap the words you want to capture!</p>
+            </div>
+          </div>
+          
+          <div class="instruction-step">
+            <div class="instruction-icon">🎯</div>
+            <div class="text-left">
+              <strong class="text-purple-600">Step 2:</strong>
+              <p class="text-sm">Find all the <span id="targetTypeText">NOUNS</span> (names of things)</p>
+            </div>
+          </div>
+          
+          <div class="instruction-step">
+            <div class="instruction-icon">⏰</div>
+            <div class="text-left">
+              <strong class="text-purple-600">Step 3:</strong>
+              <p class="text-sm">Beat the timer to win!</p>
+            </div>
+          </div>
+          
+          <div class="instruction-step">
+            <div class="instruction-icon">🔊</div>
+            <div class="text-left">
+              <strong class="text-purple-600">Tip:</strong>
+              <p class="text-sm">Turn on sound for help and fun effects!</p>
+            </div>
+          </div>
+        </div>
+        
+        <button onclick="startGame()" class="btn bg-gradient-to-r from-green-400 to-green-600 text-white w-full">
+          Let's Play! 🚀
+        </button>
+      </div>
+    </div>
+
+    <!-- Completion Modal -->
+    <div id="completionModal" class="modal">
+      <div class="modal-content">
+        <div class="trophy">🏆</div>
+        <h2 class="text-3xl font-bold text-yellow-500 mb-2">Amazing!</h2>
+        <p class="text-xl mb-4" id="completionMessage">You found all the words!</p>
+        <p class="text-lg text-gray-600 mb-2">Score: <strong id="roundScore">0</strong> points</p>
+        <p class="text-base text-gray-600 mb-6">Total Score: <strong id="modalTotalScore">0</strong> points</p>
+        <button onclick="nextRound()" class="btn bg-gradient-to-r from-blue-400 to-blue-600 text-white w-full mb-3">
+          Next Challenge! 🎯
+        </button>
+        <!-- <button onclick="showLeaderboard()" class="btn bg-gradient-to-r from-purple-400 to-purple-600 text-white w-full">
+          View Leaderboard 🏅
+        </button> -->
+      </div>
+    </div>
+
+    <!-- Time Up Modal -->
+    <div id="timeUpModal" class="modal">
+      <div class="modal-content">
+        <div class="text-6xl mb-4">⏰</div>
+        <h2 class="text-2xl font-bold text-red-600 mb-4">Time's Up!</h2>
+        <p class="text-lg mb-2">You captured <strong id="capturedCount">0</strong> words!</p>
+        <p class="text-base text-gray-600 mb-6">Don't worry, let's try again!</p>
+        <button onclick="nextRound()" class="btn bg-gradient-to-r from-green-400 to-green-600 text-white w-full">
+          Try Again! 💪
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal">
+      <div class="modal-content">
+        <div class="loading-spinner"></div>
+        <p class="text-base text-gray-600 mt-4">Loading new words...</p>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="game-card flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-bold text-purple-600 flex items-center gap-2">
+          <i class='bx bxs-star text-yellow-400'></i> Word Capture
+          <span class="voice-indicator" id="voiceIndicator"></span>
+        </h1>
+        <div class="flex items-center gap-2 mt-1">
+          <span class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">Level <span id="levelNumber">1</span></span>
+          <span class="text-xs text-gray-600">Score: <strong id="totalScore">0</strong></span>
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="text-2xl font-bold" id="timer">3:00</div>
+        <div class="text-xs text-gray-500">Time Left</div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="game-card">
+      <div class="flex justify-between items-center mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-purple-600">🎯 Capture:</span>
+          <span class="text-lg font-bold text-purple-600" id="targetType">NOUNS</span>
+        </div>
+        <span class="text-sm font-bold text-gray-700"><span id="captured">0</span>/<span id="total">8</span></span>
+      </div>
+      
+      <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+        <div id="progressBar" class="bg-gradient-to-r from-green-400 to-green-600 h-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+      
+      <p class="text-xs text-gray-600 mt-2 text-center" id="targetHint">Find all the naming words!</p>
+    </div>
+
+    <!-- Words Grid -->
+    <div class="game-card">
+      <div id="wordsGrid" class="flex flex-wrap justify-center">
+        <!-- Words will be generated here -->
+      </div>
+    </div>
+
+    <!-- Captured Words -->
+    <div class="game-card">
+      <p class="text-sm text-gray-600 mb-2 font-semibold flex items-center gap-2">
+        <i class='bx bx-check-circle text-green-500'></i>
+        Captured Words:
+      </p>
+      <div class="captured-words" id="capturedWords">
+        <span class="text-sm text-gray-400">Tap words above to capture them!</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex gap-3 mb-4">
+      <button id="hintBtn" class="btn bg-gradient-to-r from-orange-400 to-orange-600 text-white flex-1">
+        💡 Hint
+      </button>
+      <button id="soundBtn" class="btn bg-gradient-to-r from-purple-400 to-purple-600 text-white flex-1">
+        🔊 Sound
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation (from your template) -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white p-2 flex justify-around text-gray-600 border-t border-gray-200 z-50">
+    <a href="{% url 'home' %}" class="flex flex-col items-center hover:text-black text-xs font-fredoka py-2">
+      <i class='bx bx-home text-xl mb-1'></i>
+      <span class="text-xs">Home</span>
+    </a>
+    <a href="{% url 'games_page' %}" class="flex flex-col items-center hover:text-black text-xs font-fredoka py-2 text-purple-600">
+      <i class='bx bx-joystick text-xl mb-1'></i>
+      <span class="text-xs">Games</span>
+    </a>
+    <a href="#" class="flex flex-col items-center hover:text-black text-xs font-fredoka py-2">
+      <i class='bx bx-bookmark text-xl mb-1'></i>
+      <span class="text-xs">Saved</span>
+    </a>
+  </div>
+
+  <script>
+    // Game State
+    let currentLevel = 1;
+    let currentRound = 1;
+    let totalScore = 0;
+    let roundScore = 0;
+    let timer = 180;
+    let timerInterval;
+    let gameActive = false;
+    let soundEnabled = true;
+    let currentTarget = 'noun';
+    let currentWords = [];
+    let capturedWords = [];
+    let targetWords = [];
+    
+    // Audio Context for sounds
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let bgMusicOscillator = null;
+    
+    // Part of speech configurations
+    const targetTypes = {
+      noun: {
+        name: 'NOUNS',
+        hint: 'Find all the naming words (people, places, things)!',
+        examples: ['DOG', 'CAT', 'APPLE', 'TREE', 'BALL', 'BOOK', 'CAR', 'HOUSE'],
+        color: 'noun'
+      },
+      verb: {
+        name: 'VERBS',
+        hint: 'Find all the action words (what you can do)!',
+        examples: ['RUN', 'JUMP', 'SING', 'DANCE', 'EAT', 'PLAY', 'SWIM', 'READ'],
+        color: 'verb'
+      },
+      adjective: {
+        name: 'ADJECTIVES',
+        hint: 'Find all the describing words (how things look/feel)!',
+        examples: ['BIG', 'SMALL', 'HAPPY', 'BLUE', 'FAST', 'TALL', 'HOT', 'SOFT'],
+        color: 'adjective'
+      }
+    };
+    
+    // Sound Functions
+    function playSound(freq, duration, type = 'sine', volume = 0.3) {
+      if (!soundEnabled) return;
+      
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      
+      osc.frequency.value = freq;
+      osc.type = type;
+      gain.gain.value = volume;
+      
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      osc.stop(audioContext.currentTime + duration);
+    }
+    
+    function playClickSound() {
+      playSound(440, 0.1, 'square', 0.2);
+    }
+    
+    function playSuccessSound() {
+      playSound(523, 0.15);
+      setTimeout(() => playSound(659, 0.15), 100);
+      setTimeout(() => playSound(784, 0.2), 200);
+    }
+    
+    function playErrorSound() {
+      playSound(200, 0.3, 'sawtooth', 0.25);
+    }
+    
+    function playCelebrationSound() {
+      const notes = [523, 587, 659, 698, 784, 880, 988, 1047];
+      notes.forEach((note, i) => {
+        setTimeout(() => playSound(note, 0.15), i * 80);
+      });
+    }
+    
+    function playBackgroundMusic() {
+      if (!soundEnabled || bgMusicOscillator) return;
+      
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      
+      osc.frequency.value = 220;
+      osc.type = 'sine';
+      gain.gain.value = 0.03;
+      
+      osc.start();
+      bgMusicOscillator = osc;
+    }
+    
+    function stopBackgroundMusic() {
+      if (bgMusicOscillator) {
+        bgMusicOscillator.stop();
+        bgMusicOscillator = null;
+      }
+    }
+    
+    function speak(text, rate = 0.85) {
+      if (!soundEnabled || !window.speechSynthesis) return;
+      
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = rate;
+      utterance.pitch = 1.1;
+      utterance.volume = 1;
+      
+      // Show voice indicator
+      document.getElementById('voiceIndicator').style.display = 'inline-block';
+      
+      utterance.onend = () => {
+        document.getElementById('voiceIndicator').style.display = 'none';
+      };
+      
+      speechSynthesis.speak(utterance);
+    }
+    
+    function vibrate(pattern) {
+      if (navigator.vibrate) {
+        navigator.vibrate(pattern);
+      }
+    }
+    
+    // Visual Effects
+    function createStars() {
+      const starBg = document.getElementById('starBg');
+      for (let i = 0; i < 50; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.width = Math.random() * 3 + 'px';
+        star.style.height = star.style.width;
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 3 + 's';
+        starBg.appendChild(star);
+      }
+    }
+    
+    function createConfetti() {
+      const colors = ['#FFC107', '#8BC34A', '#03A9F4', '#E91E63', '#9C27B0'];
+      for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+          const confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.left = Math.random() * 100 + '%';
+          confetti.style.top = '-10px';
+          confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+          document.body.appendChild(confetti);
+          setTimeout(() => confetti.remove(), 3000);
+        }, i * 30);
+      }
+    }
+    
+    // Game Logic
+    async function fetchWords() {
+      try {
+        const difficulty = currentLevel <= 3 ? 'easy' : currentLevel <= 7 ? 'medium' : 'hard';
+        const response = await fetch(`/api/get-word-set/?difficulty=${difficulty}`);
+        const data = await response.json();
+        
+        if (data.words && data.words.length >= 5) {
+          return data.words.map(w => w.toUpperCase());
+        }
+      } catch (error) {
+        console.error('Error fetching words:', error);
+      }
+      
+      // Fallback to local words
+      return targetTypes[currentTarget].examples;
+    }
+    
+    function generateWords() {
+      // Mix target words with other types
+      const targetCount = 5 + Math.floor(currentLevel / 2);
+      const otherCount = 3 + Math.floor(currentLevel / 3);
+      
+      const types = Object.keys(targetTypes);
+      const otherTypes = types.filter(t => t !== currentTarget);
+      
+      targetWords = [...targetTypes[currentTarget].examples]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, targetCount);
+      
+      const otherWords = [];
+      otherTypes.forEach(type => {
+        const count = Math.ceil(otherCount / otherTypes.length);
+        otherWords.push(...targetTypes[type].examples
+          .sort(() => Math.random() - 0.5)
+          .slice(0, count));
+      });
+      
+      currentWords = [...targetWords, ...otherWords.slice(0, otherCount)]
+        .sort(() => Math.random() - 0.5);
+    }
+    
+    function renderWords() {
+      const grid = document.getElementById('wordsGrid');
+      grid.innerHTML = '';
+      
+      currentWords.forEach(word => {
+        const wordEl = document.createElement('div');
+        wordEl.className = 'word';
+        wordEl.textContent = word;
+        wordEl.dataset.word = word;
+        
+        // Determine word type for styling
+        let wordType = '';
+        for (const [type, config] of Object.entries(targetTypes)) {
+          if (config.examples.includes(word)) {
+            wordType = type;
+            break;
+          }
+        }
+        
+        wordEl.classList.add(wordType || 'noun');
+        wordEl.addEventListener('click', handleWordClick);
+        grid.appendChild(wordEl);
+      });
+    }
+    
+    function handleWordClick(e) {
+      if (!gameActive) return;
+      
+      const wordEl = e.target;
+      const word = wordEl.dataset.word;
+      
+      if (capturedWords.includes(word)) return;
+      
+      playClickSound();
+      vibrate(30);
+      
+      // Check if it's the correct type
+      const isCorrect = targetWords.includes(word);
+      
+      if (isCorrect) {
+        // Correct!
+        wordEl.classList.add('captured');
+        capturedWords.push(word);
+        
+        playSuccessSound();
+        vibrate(100);
+        speak('Correct!');
+        
+        // Update captured words display
+        updateCapturedDisplay();
+        updateProgress();
+        
+        // Calculate score
+        const points = 10 + (currentLevel * 2);
+        roundScore += points;
+        totalScore += points;
+        
+        document.getElementById('totalScore').textContent = totalScore;
+        
+        // Check if round complete
+        if (capturedWords.length === targetWords.length) {
+          setTimeout(completeRound, 1000);
+        }
+      } else {
+        // Wrong!
+        wordEl.classList.add('wrong-capture');
+        setTimeout(() => wordEl.classList.remove('wrong-capture'), 500);
+        
+        playErrorSound();
+        vibrate([50, 50, 50]);
+        speak('Oops! Try again!');
+        
+        // Lose points for wrong selection
+        roundScore = Math.max(0, roundScore - 5);
+        totalScore = Math.max(0, totalScore - 5);
+        document.getElementById('totalScore').textContent = totalScore;
+      }
+    }
+    
+    function updateCapturedDisplay() {
+      const container = document.getElementById('capturedWords');
+      
+      if (capturedWords.length === 0) {
+        container.innerHTML = '<span class="text-sm text-gray-400">Tap words above to capture them!</span>';
+      } else {
+        container.innerHTML = '';
+        capturedWords.forEach(word => {
+          const tag = document.createElement('span');
+          tag.className = 'captured-word-tag';
+          tag.innerHTML = `⭐ ${word}`;
+          container.appendChild(tag);
+        });
+      }
+    }
+    
+    function updateProgress() {
+      const captured = capturedWords.length;
+      const total = targetWords.length;
+      const percentage = (captured / total) * 100;
+      
+      document.getElementById('captured').textContent = captured;
+      document.getElementById('total').textContent = total;
+      document.getElementById('progressBar').style.width = percentage + '%';
+    }
+    
+    function updateTimer() {
+      if (timer <= 0) {
+        endRound();
+        return;
+      }
+      
+      const minutes = Math.floor(timer / 60);
+      const seconds = timer % 60;
+      const timerDisplay = document.getElementById('timer');
+      timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      
+      // Danger zone (last 20 seconds)
+      if (timer === 20) {
+        timerDisplay.classList.add('timer-danger');
+        playErrorSound();
+        vibrate(200);
+        speak('Hurry up! Only 20 seconds left!');
+      } else if (timer === 10) {
+        speak('10 seconds!');
+      }
+      
+      timer--;
+    }
+    
+    function completeRound() {
+      gameActive = false;
+      clearInterval(timerInterval);
+      
+      playCelebrationSound();
+      vibrate([100, 50, 100, 50, 100]);
+      createConfetti();
+      
+      // Time bonus
+      const timeBonus = timer * 2;
+      roundScore += timeBonus;
+      totalScore += timeBonus;
+      
+      document.getElementById('totalScore').textContent = totalScore;
+      document.getElementById('roundScore').textContent = roundScore;
+      document.getElementById('modalTotalScore').textContent = totalScore;
+      document.getElementById('completionMessage').textContent = `Perfect! You found all ${targetWords.length} ${targetTypes[currentTarget].name}!`;
+      
+      speak(`Amazing! You found all the ${targetTypes[currentTarget].name}! Your score is ${roundScore} points!`);
+      
+      setTimeout(() => {
+        document.getElementById('completionModal').classList.add('active');
+      }, 1500);
+    }
+    
+    function endRound() {
+      gameActive = false;
+      clearInterval(timerInterval);
+      
+      playErrorSound();
+      vibrate(300);
+      
+      document.getElementById('capturedCount').textContent = capturedWords.length;
+      document.getElementById('timeUpModal').classList.add('active');
+      
+      speak(`Time's up! You captured ${capturedWords.length} words. Let's try again!`);
+    }
+    
+    async function nextRound() {
+      document.getElementById('completionModal').classList.remove('active');
+      document.getElementById('timeUpModal').classList.remove('active');
+      document.getElementById('loadingModal').classList.add('active');
+      
+      currentRound++;
+      currentLevel = Math.floor((currentRound - 1) / 3) + 1;
+      
+      // Rotate through different parts of speech
+      const types = Object.keys(targetTypes);
+      currentTarget = types[(currentRound - 1) % types.length];
+      
+      // Reset round state
+      capturedWords = [];
+      roundScore = 0;
+      timer = Math.max(120, 180 - (currentLevel * 10)); // Decrease time as level increases
+      
+      // Update UI
+      document.getElementById('levelNumber').textContent = currentLevel;
+      document.getElementById('targetType').textContent = targetTypes[currentTarget].name;
+      document.getElementById('targetHint').textContent = targetTypes[currentTarget].hint;
+      document.getElementById('targetTypeText').textContent = targetTypes[currentTarget].name;
+      
+      // Generate new words
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      generateWords();
+      renderWords();
+      updateCapturedDisplay();
+      updateProgress();
+      
+      document.getElementById('loadingModal').classList.remove('active');
+      
+      // Start game
+      gameActive = true;
+      timerInterval = setInterval(updateTimer, 1000);
+      
+      speak(`Level ${currentLevel}! Find all the ${targetTypes[currentTarget].name}. ${targetTypes[currentTarget].hint}`);
+    }
+    
+    function startGame() {
+      document.getElementById('tutorialModal').classList.remove('active');
+      
+      // Initialize
+      currentTarget = 'noun';
+      document.getElementById('targetType').textContent = targetTypes[currentTarget].name;
+      document.getElementById('targetHint').textContent = targetTypes[currentTarget].hint;
+      
+      generateWords();
+      renderWords();
+      updateCapturedDisplay();
+      updateProgress();
+      
+      gameActive = true;
+      timerInterval = setInterval(updateTimer, 1000);
+      
+      if (soundEnabled) {
+        playBackgroundMusic();
+      }
+      
+      speak(`Welcome to Word Capture! Find all the ${targetTypes[currentTarget].name}. ${targetTypes[currentTarget].hint}`);
+    }
+    
+    function showHint() {
+      if (!gameActive) return;
+      
+      const remaining = targetWords.filter(w => !capturedWords.includes(w));
+      if (remaining.length === 0) {
+        speak('You found all the words! Great job!');
+        return;
+      }
+      
+      const hintWord = remaining[0];
+      playClickSound();
+      vibrate(50);
+      
+      // Highlight the hint word briefly
+      const wordElements = document.querySelectorAll('.word');
+      wordElements.forEach(el => {
+        if (el.dataset.word === hintWord && !el.classList.contains('captured')) {
+          el.style.border = '3px solid #fbbf24';
+          setTimeout(() => {
+            el.style.border = '3px solid transparent';
+          }, 2000);
+        }
+      });
+      
+      speak(`Try to find ${hintWord}. It's a ${currentTarget}!`);
+    }
+    
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('soundBtn');
+      btn.textContent = soundEnabled ? '🔊 Sound' : '🔇 Muted';
+      
+      if (soundEnabled) {
+        playBackgroundMusic();
+        playClickSound();
+        speak('Sound is on!');
+      } else {
+        stopBackgroundMusic();
+        speechSynthesis.cancel();
+      }
+      
+      vibrate(50);
+    }
+    
+    async function showLeaderboard() {
+      // This would connect to your backend leaderboard API
+      // For now, just close the modal
+      document.getElementById('completionModal').classList.remove('active');
+      speak('Leaderboard coming soon!');
+    }
+    
+    // Event Listeners
+    document.getElementById('hintBtn').addEventListener('click', showHint);
+    document.getElementById('soundBtn').addEventListener('click', toggleSound);
+    
+    // Initialize on load
+    window.addEventListener('load', () => {
+      createStars();
+      
+      // Auto-start tutorial
+      speak('Welcome to Word Capture! Let me show you how to play!');
+    });
+    
+    // Prevent accidental zoom and context menu
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+    
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    
+    // Save game state before leaving
+    window.addEventListener('beforeunload', () => {
+      if (gameActive && totalScore > 0) {
+        // Could save to localStorage or send to server
+        localStorage.setItem('wordCaptureScore', totalScore);
+        localStorage.setItem('wordCaptureLevel', currentLevel);
+      }
+    });
+    
+    console.log('Word Capture Adventure - Ready to Play! 🎮');
+  </script>
+</body>
+</html>

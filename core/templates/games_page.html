@@ -1,0 +1,226 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Load Poppins as primary font, Maria as secondary -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/maria-2" rel="stylesheet">
+  
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  
+  <style>
+    /* Poppins as primary font for body */
+    body {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+    }
+    
+    /* Maria for specific decorative elements */
+    .font-maria {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+    }
+    
+    /* Poppins for consistent UI */
+    .font-poppins {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+    }
+    
+    /* Typography styles */
+    .heading-primary {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    
+    .heading-secondary {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .btn-play {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-play:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .icon-shadow {
+      box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 
+                  -2px -2px 4px rgba(0, 0, 0, 0.2), 
+                  3px 3px 6px rgba(0, 0, 0, 0.1), 
+                  -3px -3px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .content-container {
+      padding-bottom: 3.5rem; /* Space for fixed bottom nav */
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      .heading-primary {
+        font-size: 1.125rem;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-poppins">
+  <div class="content-container overflow-y-auto h-screen p-3">
+    
+    
+    <h2 class="font-poppins heading-primary mb-3">Games & Activities</h2>
+    
+    <div class="space-y-3">
+      <!-- Word Search -->
+      <!-- <div class="bg-purple-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-purple-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-search text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Word Search</h3>
+          <p class="text-xs font-poppins">Search for hidden words in a puzzle grid! This game helps you learn new words and practice spelling.</p>
+          <a href="{% url 'words_search' %}" class="bg-white text-purple-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div> -->
+
+      <!-- Tracing Letters -->
+      <!-- <div class="bg-orange-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-orange-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-pencil text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Tracing Letters</h3>
+          <p class="text-xs font-poppins">Trace the letters and watch your handwriting get better with practice!</p>
+          <a href="{% url 'tracing_letters' %}" class="bg-white text-orange-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div> -->
+
+      <!-- Word Capture -->
+      <!-- <div class="bg-blue-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-blue-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-book text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Word Capture</h3>
+          <p class="text-xs font-poppins">Catch the correct words by dragging or tapping them before time runs out! This game helps you build your vocabulary and recognize words quickly.</p>
+          <a href="{% url 'capture_words' %}" class="bg-white text-blue-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div> -->
+
+      <!-- Fun Exercise -->
+      <!-- <div class="bg-green-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-green-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-check-circle text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Fun Exercise</h3>
+          <p class="text-xs font-poppins">Try a surprise learning activity! Each time you play, it's a new challenge that makes learning exciting and keeps your brain sharp.</p>
+          <a href="{% url 'match_game' %}" class="bg-white text-green-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div> -->
+      <!-- Quiz Game -->
+      <div class="bg-blue-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-blue-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-question-mark text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Quiz Game</h3>
+          <p class="text-xs font-poppins">Test your knowledge with fun and challenging questions! Play this quiz game to learn new facts and sharpen your mind.</p>
+          <a href="{% url 'quizes' %}" class="bg-white text-blue-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Math Game -->
+      <div class="bg-purple-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-purple-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-calculator text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Math Game</h3>
+          <p class="text-xs font-poppins">Solve fun math puzzles to boost your number skills! Practice addition, subtraction, and more in this exciting challenge.</p>
+          <a href="{% url 'math_game' %}" class="bg-white text-purple-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Sentence Builder -->
+      <div class="bg-red-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-red-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-message-square-detail text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Sentence Builder</h3>
+          <p class="text-xs font-poppins">Arrange words to create correct sentences! This game helps you improve grammar and sentence structure with fun challenges.</p>
+          <a href="{% url 'sentence_builder' %}" class="bg-white text-red-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Memory Game -->
+      <div class="bg-green-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-green-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-memory-card text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Memory Game</h3>
+          <p class="text-xs font-poppins">Test and improve your memory skills! Flip cards to find matching pairs in this fun and engaging memory challenge.</p>
+          <a href="{% url 'game' %}" class="bg-white text-green-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Color Game -->
+      <div class="bg-yellow-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-yellow-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-palette text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Color Game</h3>
+          <p class="text-xs font-poppins">Learn colors and their names with fun activities! This game is perfect for kids to explore the world of colors.</p>
+          <a href="{% url 'color_game' %}" class="bg-white text-yellow-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <br>
+      <br>
+      <br>
+      <br>
+    </div>
+  </div>
+  
+  <!-- Bottom Navigation -->
+{% include 'bottom_nav.html' %}
+</body>
+</html>
