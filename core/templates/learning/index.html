@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Categories - EduPlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.cdnfonts.com/css/poppins" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9fafb;
+            padding-bottom: 80px;
+        }
+        .nav-item.active svg {
+            stroke: #3b82f6;
+        }
+        .nav-item.active span {
+            color: #3b82f6;
+        }
+        .category-card {
+            transition: all 0.3s ease;
+        }
+        .category-card:hover {
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="px-4 py-4">
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <span class="text-blue-500">🎓</span> Learning Categories
+            </h1>
+            <p class="text-gray-600 text-sm mt-1">Choose a category and start learning through fun games!</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="px-4 py-4">
+        <!-- Game Type Selector -->
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4">
+            <button class="game-type-btn flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-full font-medium text-sm whitespace-nowrap transition-colors" data-game-type="matching">
+                <span>🧩</span> Matching Game
+            </button>
+            <button class="game-type-btn flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-full font-medium text-sm whitespace-nowrap transition-colors hover:bg-gray-300" data-game-type="word-search">
+                <span>🔍</span> Word Search
+            </button>
+            <button class="game-type-btn flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-full font-medium text-sm whitespace-nowrap transition-colors hover:bg-gray-300" data-game-type="tracing">
+                <span>✏️</span> Tracing
+            </button>
+            <button class="game-type-btn flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-full font-medium text-sm whitespace-nowrap transition-colors hover:bg-gray-300" data-game-type="capture">
+                <span>🎯</span> Word Capture
+            </button>
+        </div>
+
+        <!-- Categories Grid -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">Choose Your Learning Category</h3>
+            <div class="grid grid-cols-2 gap-4" id="categories-grid">
+                <div class="loading text-gray-500 text-center col-span-2 py-8">Loading categories...</div>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <span>📊</span> Your Learning Progress
+            </h3>
+            <div class="grid grid-cols-1 gap-3" id="progress-grid">
+                <div class="loading text-gray-500 text-center py-4">Loading progress...</div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-4 text-white mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-bold text-lg mb-1">Keep Learning!</h3>
+                    <p class="text-purple-100 text-sm">You're doing great! Continue your learning journey.</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-2xl font-bold" id="total-score">0</div>
+                    <div class="text-purple-100 text-xs">Total Points</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-20">
+        <div class="flex justify-around items-center max-w-lg mx-auto">
+            <button onclick="goToHome()" class="nav-item flex flex-col items-center px-4 py-2 rounded-lg transition-colors">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span class="text-xs font-medium text-gray-600">Home</span>
+            </button>
+
+            <button class="nav-item active flex flex-col items-center px-4 py-2 rounded-lg transition-colors">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                <span class="text-xs font-medium text-blue-600">Categories</span>
+            </button>
+
+            <button onclick="goToGames()" class="nav-item flex flex-col items-center px-4 py-2 rounded-lg transition-colors">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-xs font-medium text-gray-600">Games</span>
+            </button>
+
+            <button onclick="goToProfile()" class="nav-item flex flex-col items-center px-4 py-2 rounded-lg transition-colors">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <span class="text-xs font-medium text-gray-600">Profile</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        let userIdentifier = localStorage.getItem('user_identifier') || generateUserIdentifier();
+        let currentGameType = 'matching'; // Default to matching game
+
+        function generateUserIdentifier() {
+            const identifier = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('user_identifier', identifier);
+            return identifier;
+        }
+
+        // Game type selection
+        function initGameTypeSelector() {
+            const buttons = document.querySelectorAll('.game-type-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    buttons.forEach(b => {
+                        b.classList.remove('bg-blue-500', 'text-white');
+                        b.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    });
+                    // Add active class to clicked button
+                    this.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    this.classList.add('bg-blue-500', 'text-white');
+                    // Update current game type
+                    currentGameType = this.dataset.gameType;
+                    // Reload categories for the selected game type
+                    initCategories();
+                });
+            });
+        }
+
+        async function fetchCategories() {
+            try {
+                // Mock categories data - replace with actual API call
+                const mockCategories = [
+                    { id: 1, name: 'Mathematics', icon: '➕', description: 'Learn numbers, shapes, and basic math concepts', word_count: 15 },
+                    { id: 2, name: 'Science', icon: '🔬', description: 'Explore animals, plants, and the world around us', word_count: 12 },
+                    { id: 3, name: 'Grammar', icon: '📚', description: 'Master letters, words, and sentence structure', word_count: 18 },
+                    { id: 4, name: 'Social Studies', icon: '🌍', description: 'Discover communities, cultures, and geography', word_count: 10 },
+                    { id: 5, name: 'Animals', icon: '🐾', description: 'Learn about different animals and their habitats', word_count: 20 },
+                    { id: 6, name: 'Food', icon: '🍎', description: 'Explore healthy foods and nutrition', word_count: 14 }
+                ];
+                
+                return mockCategories;
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+                return [];
+            }
+        }
+
+        async function fetchUserProgress() {
+            try {
+                // Mock progress data - replace with actual API call
+                const mockProgress = [
+                    { category: 'Mathematics', levels_completed: 3, total_score: 450, games_played: 5, items_completed: 12 },
+                    { category: 'Science', levels_completed: 2, total_score: 320, games_played: 3, items_completed: 8 },
+                    { category: 'Grammar', levels_completed: 1, total_score: 180, games_played: 2, items_completed: 5 },
+                    { category: 'Animals', levels_completed: 4, total_score: 560, games_played: 6, items_completed: 15 }
+                ];
+                
+                return mockProgress;
+            } catch (error) {
+                console.error('Error fetching progress:', error);
+                return [];
+            }
+        }
+
+        function navigateToGame(categoryId) {
+            let gameUrl;
+            if (currentGameType === 'matching') {
+                gameUrl = `/matching/game/${categoryId}/`;
+            } else if (currentGameType === 'word-search') {
+                gameUrl = `/word-search/${categoryId}/`;
+            } else if (currentGameType === 'tracing') {
+                gameUrl = `/tracing/${categoryId}/`;
+            } else if (currentGameType === 'capture') {
+                gameUrl = `/word-capture/${categoryId}/`;
+            } else {
+                gameUrl = `/games/${categoryId}/`;
+            }
+            window.location.href = gameUrl;
+        }
+
+        async function initCategories() {
+            const categoriesGrid = document.getElementById('categories-grid');
+            const [categories, progress] = await Promise.all([
+                fetchCategories(),
+                fetchUserProgress()
+            ]);
+
+            if (categories.length === 0) {
+                categoriesGrid.innerHTML = '<div class="text-gray-500 text-center col-span-2 py-8">No categories available</div>';
+                return;
+            }
+
+            categoriesGrid.innerHTML = '';
+
+            categories.forEach(category => {
+                // Find progress for this category
+                const categoryProgress = progress.find(p => 
+                    p.category === category.name
+                ) || {};
+                
+                const levelsCompleted = categoryProgress.levels_completed || 0;
+                const totalScore = categoryProgress.total_score || 0;
+                const gamesPlayed = categoryProgress.games_played || 0;
+                
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'category-card bg-white rounded-xl p-4 shadow-sm border border-gray-200 cursor-pointer';
+                categoryCard.onclick = () => navigateToGame(category.id);
+                
+                categoryCard.innerHTML = `
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="text-2xl">${category.icon}</div>
+                        <div class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full font-medium">
+                            ${category.word_count} items
+                        </div>
+                    </div>
+                    <div class="category-name font-semibold text-gray-800 mb-2">${category.name}</div>
+                    <div class="category-description text-xs text-gray-600 mb-3 leading-relaxed">${category.description}</div>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <div class="flex items-center gap-1">
+                            <span>🎯</span>
+                            <span>${levelsCompleted}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span>⭐</span>
+                            <span>${totalScore}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span>🎮</span>
+                            <span>${gamesPlayed}</span>
+                        </div>
+                    </div>
+                `;
+                
+                categoriesGrid.appendChild(categoryCard);
+            });
+
+            // Update progress section
+            initProgressSection(progress);
+        }
+
+        function initProgressSection(progress) {
+            const progressGrid = document.getElementById('progress-grid');
+            const totalScoreElement = document.getElementById('total-score');
+            
+            if (progress.length === 0) {
+                progressGrid.innerHTML = '<div class="text-gray-500 text-center py-4">No progress yet. Start playing to see your progress!</div>';
+                totalScoreElement.textContent = '0';
+                return;
+            }
+
+            progressGrid.innerHTML = '';
+
+            // Calculate total score
+            let totalScore = 0;
+
+            progress.forEach(item => {
+                totalScore += item.total_score || 0;
+                
+                const progressItem = document.createElement('div');
+                progressItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                
+                progressItem.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                            ${getCategoryIcon(item.category)}
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-800 text-sm">${item.category}</div>
+                            <div class="text-xs text-gray-500">${item.levels_completed || 0} levels completed</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold text-gray-800">${item.total_score || 0}</div>
+                        <div class="text-xs text-gray-500">points</div>
+                    </div>
+                `;
+                
+                progressGrid.appendChild(progressItem);
+            });
+
+            totalScoreElement.textContent = totalScore;
+        }
+
+        function getCategoryIcon(categoryName) {
+            const icons = {
+                'Mathematics': '➕',
+                'Science': '🔬',
+                'Grammar': '📚',
+                'Social Studies': '🌍',
+                'Animals': '🐾',
+                'Food': '🍎'
+            };
+            return icons[categoryName] || '📁';
+        }
+
+        function goToHome() {
+            window.location.href = '/';
+        }
+
+        function goToGames() {
+            window.location.href = '/games';
+        }
+
+        function goToProfile() {
+            window.location.href = '/profile';
+        }
+
+        // Initialize the app when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initGameTypeSelector();
+            initCategories();
+        });
+    </script>
+</body>
+</html>

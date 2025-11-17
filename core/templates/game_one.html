@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Animal Matching Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        :root {
+            --primary: #2196F3;
+            --primary-dark: #1976D2;
+            --secondary: #4CAF50;
+            --accent: #FF9800;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --error: #F44336;
+            --light: #FAFAFA;
+            --dark: #212121;
+            --text: #424242;
+            --background: #F5F5F5;
+            --surface: #FFFFFF;
+            --border: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Roboto', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            color: var(--text);
+            overflow: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 80px;
+        }
+
+        /* Disable zooming and bouncing */
+        html, body {
+            touch-action: pan-x pan-y;
+            overscroll-behavior: none;
+        }
+
+        /* App Header */
+        .app-header {
+            background: var(--surface);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            margin-right: 12px;
+            color: var(--text);
+            padding: 4px;
+        }
+
+        .back-btn:active {
+            opacity: 0.7;
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .timer {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            font-family: 'Inter', monospace;
+        }
+
+        /* Main content */
+        .main-content {
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Section Header Card */
+        .section-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+        }
+
+        .section-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .section-header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .section-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        /* Description */
+        .description {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Game Board */
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .match-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .animal-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.2s ease;
+            border: 2px solid var(--border);
+            flex: 1;
+            font-size: 36px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .animal-card:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .animal-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .animal-card.selected {
+            background: #E3F2FD;
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .name-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s ease;
+            border: 2px solid var(--border);
+            flex: 1;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .name-card:active {
+            transform: scale(0.98);
+        }
+
+        .name-card.selected {
+            border-color: var(--primary);
+            transform: scale(1.02);
+            background: #E3F2FD;
+        }
+
+        .name-card.drag-over {
+            background: #E3F2FD;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .matched {
+            opacity: 0.7;
+            pointer-events: none;
+            background: #E8F5E8 !important;
+            border-color: var(--success) !important;
+            color: var(--success);
+        }
+
+        .connection-line {
+            height: 2px;
+            background: var(--border);
+            opacity: 0.5;
+            flex: 0 0 40px;
+            border-radius: 1px;
+        }
+
+        /* Celebration Overlay */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .celebration.show {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .celebration-content {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 320px;
+            width: 100%;
+            animation: scaleIn 0.3s ease-out;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .celebration h3 {
+            color: var(--success);
+            font-size: 24px;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+
+        .celebration p {
+            color: var(--text);
+            font-size: 16px;
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            border-top: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
+            max-width: 120px;
+            font-family: inherit;
+            text-transform: none;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .submit-btn:active {
+            background: var(--primary-dark);
+        }
+
+        .hint-btn {
+            background: var(--warning);
+            color: var(--dark);
+        }
+
+        .hint-btn:active {
+            background: #e6ac00;
+        }
+
+        .next-btn {
+            background: var(--success);
+            color: white;
+        }
+
+        .next-btn:active {
+            background: #45a049;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 480px) {
+            .main-content {
+                padding: 16px;
+            }
+            
+            .animal-card, .name-card {
+                padding: 16px;
+                font-size: 32px;
+                min-height: 70px;
+            }
+            
+            .name-card {
+                font-size: 14px;
+            }
+            
+            .section-header {
+                padding: 16px;
+            }
+            
+            .section-header h2 {
+                font-size: 18px;
+            }
+            
+            .bottom-nav {
+                padding: 12px 16px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
+
+        /* Prevent text selection and context menu */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-callout: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- App Header -->
+    <header class="app-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1 class="header-title">Animal Match</h1>
+        <div class="timer" id="timer">0:30</div>
+    </header>
+
+    <main class="main-content">
+        <!-- Section Header -->
+        <div class="section-header">
+            <div class="section-icon">🐾</div>
+            <h2>Match & Learn</h2>
+            <p>Drag animals to their names</p>
+        </div>
+
+        <!-- Description -->
+        <div class="description">
+            Drag each animal emoji to its matching name!
+        </div>
+
+        <!-- Game Board -->
+        <div class="game-board" id="game-board">
+            <!-- Rows will be dynamically generated -->
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="btn submit-btn" onclick="submitAnswer()">Submit</button>
+        <button class="btn hint-btn" onclick="showHint()">Hint</button>
+        <button class="btn next-btn" onclick="nextLevel()">Next</button>
+    </nav>
+
+    <!-- Celebration Overlay -->
+    <div class="celebration" id="celebration">
+        <div class="celebration-content">
+            <h3>🎉 Amazing Job!</h3>
+            <p>You matched all animals correctly!</p>
+            <button class="btn next-btn" onclick="nextLevel()" style="margin-top: 16px; width: auto; min-width: 120px;">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const animals = [
+            { emoji: '🐶', name: 'Dog' },
+            { emoji: '🐱', name: 'Cat' },
+            { emoji: '🐦', name: 'Bird' },
+            { emoji: '🐟', name: 'Fish' },
+            { emoji: '🐰', name: 'Rabbit' },
+            { emoji: '🐢', name: 'Turtle' }
+        ];
+
+        let draggedAnimal = null;
+        let matchedPairs = new Set();
+        let score = 0;
+        let timeLeft = 30;
+        let timerInterval = null;
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timeLeft = 30;
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Time's up! Let's try again.");
+                    nextLevel();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer').textContent = `0:${timeLeft.toString().padStart(2, '0')}`;
+        }
+
+        function goBack() {
+            if (confirm('Are you sure you want to leave? Your progress will be lost.')) {
+                window.history.back();
+            }
+        }
+
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function initGame() {
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = '';
+            
+            const shuffledNames = shuffle([...animals]);
+
+            animals.forEach((animal, index) => {
+                const row = document.createElement('div');
+                row.className = 'match-row';
+
+                // Animal card (fixed order) - draggable
+                const animalCard = document.createElement('div');
+                animalCard.className = 'animal-card';
+                animalCard.textContent = animal.emoji;
+                animalCard.dataset.name = animal.name;
+                animalCard.draggable = true;
+                
+                // Drag events
+                animalCard.addEventListener('dragstart', handleDragStart);
+                animalCard.addEventListener('dragend', handleDragEnd);
+                animalCard.addEventListener('touchstart', handleTouchStart, { passive: false });
+                
+                row.appendChild(animalCard);
+
+                // Connection line
+                const line = document.createElement('div');
+                line.className = 'connection-line';
+                row.appendChild(line);
+
+                // Name card (shuffled) - drop target
+                const nameAnimal = shuffledNames[index];
+                const nameCard = document.createElement('div');
+                nameCard.className = 'name-card';
+                nameCard.textContent = nameAnimal.name;
+                nameCard.dataset.name = nameAnimal.name;
+                
+                // Drop events
+                nameCard.addEventListener('dragover', handleDragOver);
+                nameCard.addEventListener('dragleave', handleDragLeave);
+                nameCard.addEventListener('drop', handleDrop);
+                nameCard.addEventListener('touchmove', handleTouchMove, { passive: false });
+                nameCard.addEventListener('touchend', handleTouchEnd, { passive: false });
+                
+                row.appendChild(nameCard);
+
+                gameBoard.appendChild(row);
+            });
+
+            startTimer();
+        }
+
+        // Touch event handlers for mobile
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        function handleTouchStart(e) {
+            if (matchedPairs.has(e.target.dataset.name)) {
+                e.preventDefault();
+                return;
+            }
+            draggedAnimal = e.target.dataset.name;
+            e.target.classList.add('dragging');
+            
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            
+            e.preventDefault();
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+        }
+
+        function handleTouchEnd(e) {
+            const touch = e.changedTouches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (element && element.classList.contains('name-card') && !matchedPairs.has(element.dataset.name)) {
+                handleDrop({ target: element, preventDefault: () => {} });
+            }
+            
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+            draggedAnimal = null;
+        }
+
+        function handleDragStart(e) {
+            if (matchedPairs.has(e.target.dataset.name)) {
+                e.preventDefault();
+                return;
+            }
+            draggedAnimal = e.target.dataset.name;
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            if (matchedPairs.has(e.target.dataset.name)) return;
+            e.preventDefault();
+            e.target.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.target.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            
+            if (matchedPairs.has(e.target.dataset.name)) return;
+            
+            const droppedOnName = e.target.dataset.name;
+            
+            // Check if match is correct
+            if (draggedAnimal === droppedOnName) {
+                const animalCard = document.querySelector(`.animal-card[data-name="${draggedAnimal}"]`);
+                const nameCard = e.target;
+                
+                animalCard.classList.add('matched');
+                nameCard.classList.add('matched');
+                animalCard.style.animation = 'celebrate 0.5s ease-in-out';
+                
+                matchedPairs.add(draggedAnimal);
+                score++;
+                
+                if (score === animals.length) {
+                    clearInterval(timerInterval);
+                    setTimeout(() => {
+                        document.getElementById('celebration').classList.add('show');
+                    }, 500);
+                }
+            } else {
+                // Wrong match feedback
+                const animalCard = document.querySelector(`.animal-card[data-name="${draggedAnimal}"]`);
+                animalCard.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    animalCard.style.animation = '';
+                }, 500);
+            }
+            
+            draggedAnimal = null;
+        }
+
+        function submitAnswer() {
+            // Check if all matches are complete
+            if (score === animals.length) {
+                clearInterval(timerInterval);
+                document.getElementById('celebration').classList.add('show');
+            } else {
+                alert(`Keep going! ${score} out of ${animals.length} matched.`);
+            }
+        }
+
+        function showHint() {
+            // Simple hint: Highlight a correct pair briefly
+            const unmatched = animals.filter(a => !matchedPairs.has(a.name));
+            if (unmatched.length > 0) {
+                const hintAnimal = document.querySelector(`.animal-card[data-name="${unmatched[0].name}"]`);
+                const hintName = document.querySelector(`.name-card[data-name="${unmatched[0].name}"]`);
+                hintAnimal.classList.add('selected');
+                hintName.classList.add('selected');
+                setTimeout(() => {
+                    hintAnimal.classList.remove('selected');
+                    hintName.classList.remove('selected');
+                }, 2000);
+            } else {
+                alert('All matched! Great job!');
+            }
+        }
+
+        function nextLevel() {
+            // Reset for next "level" (play again)
+            score = 0;
+            matchedPairs.clear();
+            document.getElementById('celebration').classList.remove('show');
+            if (timerInterval) clearInterval(timerInterval);
+            initGame();
+        }
+
+        // Initialize game on load
+        initGame();
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (timerInterval) clearInterval(timerInterval);
+            }
+        });
+    </script>
+</body>
+</html>

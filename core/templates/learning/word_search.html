@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search Adventure - EduPlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.cdnfonts.com/css/poppins" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9fafb;
+            padding-bottom: 80px;
+        }
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            touch-action: none;
+            font-size: 0.875rem;
+        }
+        .cell.selected {
+            background: #3b82f6;
+            color: white;
+            border-color: #1d4ed8;
+            z-index: 1;
+        }
+        .cell.found {
+            background: #10b981;
+            color: white;
+            border-color: #047857;
+        }
+        .cell.hint {
+            background: #f59e0b;
+            color: white;
+            border-color: #d97706;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .word-tag.found {
+            background: #10b981;
+            color: white;
+            border-color: #047857;
+        }
+        .nav-item.active svg {
+            stroke: #3b82f6;
+        }
+        .nav-item.active span {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm fixed top-0 left-0 right-0 z-10">
+        <div class="px-4 py-4 flex items-center justify-between">
+            <button onclick="goBack()" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Word Search
+            </h1>
+            <div class="timer bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-semibold border border-blue-200" id="timer">
+                0:00
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-20 px-4 pb-4">
+        <!-- Welcome Section -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm mb-6 text-center" id="welcome-section">
+            <svg class="w-8 h-8 mx-auto mb-4 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <h2 class="text-lg font-bold text-gray-800 mb-2">Word Search Adventure!</h2>
+            <p class="text-gray-600 mb-4 text-sm">
+                Find hidden words in the grid! Learn new vocabulary while having fun. 
+                Click start to begin your word search journey!
+            </p>
+            <button onclick="startGame()" class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold py-3 px-8 rounded-xl hover:opacity-90 transition-opacity inline-flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Start Playing
+            </button>
+        </div>
+
+        <!-- Game Stats -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm mb-6 hidden" id="game-stats">
+            <div class="grid grid-cols-4 gap-4 text-center">
+                <div>
+                    <div class="text-lg font-bold text-blue-600" id="found-count">0</div>
+                    <div class="text-xs text-gray-500">Found</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-gray-800" id="total-count">0</div>
+                    <div class="text-xs text-gray-500">Total</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-green-600" id="score">0</div>
+                    <div class="text-xs text-gray-500">Score</div>
+                </div>
+                <div>
+                    <div class="text-lg font-bold text-yellow-600" id="hints-used">0</div>
+                    <div class="text-xs text-gray-500">Hints</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Grid -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm mb-6 hidden" id="game-container">
+            <div id="grid-container" class="grid gap-1 mx-auto mb-4" style="max-width: 100%;"></div>
+            
+            <!-- Game Controls -->
+            <div class="flex gap-2">
+                <button onclick="getHint()" class="flex-1 bg-yellow-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-yellow-600 transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Hint
+                </button>
+                <button onclick="clearSelection()" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-600 transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Clear
+                </button>
+                <button onclick="newGame()" class="flex-1 bg-purple-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-600 transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    New Game
+                </button>
+            </div>
+        </div>
+
+        <!-- Words List -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm hidden" id="words-section">
+            <h3 class="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                Words to Find
+            </h3>
+            <div id="words-tags" class="flex flex-wrap gap-2"></div>
+            <div id="word-learning" class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200 hidden">
+                <div class="word-definition text-sm text-gray-800"></div>
+                <div class="word-example text-xs text-gray-600 mt-1"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Message Overlay -->
+    <div id="message-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full text-center">
+            <div id="message-icon" class="w-12 h-12 mx-auto mb-4 text-green-500"></div>
+            <div id="message-text" class="text-base font-semibold text-gray-800 mb-4">Excellent!</div>
+            <button onclick="closeMessage()" class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- Completion Celebration -->
+    <div id="completion-celebration" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full text-center">
+            <svg class="w-16 h-16 mx-auto mb-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <h2 class="text-xl font-bold text-green-600 mb-2">Congratulations!</h2>
+            <p class="text-gray-600 mb-4">You found all the words!</p>
+            
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-600">Time:</span>
+                    <span class="font-semibold" id="celebration-time">0:00</span>
+                </div>
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-600">Score:</span>
+                    <span class="font-semibold" id="celebration-score">0</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Hints Used:</span>
+                    <span class="font-semibold" id="celebration-hints">0</span>
+                </div>
+            </div>
+            
+            <button onclick="closeCelebration()" class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 px-4 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        // Game state
+        let gameId = null;
+        let grid = [];
+        let words = [];
+        let wordDetails = {};
+        let wordPositions = {};
+        let foundWords = new Set();
+        let selectedCells = [];
+        let isSelecting = false;
+        let startTime = null;
+        let timerInterval = null;
+        let hintCooldown = false;
+        let hintsUsed = 0;
+        let score = 0;
+        let userIdentifier = localStorage.getItem('user_identifier') || generateUserIdentifier();
+
+        function generateUserIdentifier() {
+            const identifier = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('user_identifier', identifier);
+            return identifier;
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function getStartRange(size, len, delta) {
+            if (delta === 0) return size;
+            return size - (len - 1) * Math.abs(delta);
+        }
+
+        function placeWord(grid, word, size) {
+            const directions = [
+                {dr: 0, dc: 1}, {dr: 0, dc: -1},
+                {dr: 1, dc: 0}, {dr: -1, dc: 0},
+                {dr: 1, dc: 1}, {dr: 1, dc: -1},
+                {dr: -1, dc: 1}, {dr: -1, dc: -1}
+            ];
+
+            const len = word.length;
+            for (let attempt = 0; attempt < 100; attempt++) {
+                const dir = directions[Math.floor(Math.random() * directions.length)];
+                const numRows = getStartRange(size, len, dir.dr);
+                const numCols = getStartRange(size, len, dir.dc);
+                if (numRows <= 0 || numCols <= 0) continue;
+
+                let rowMin, rowMax, colMin, colMax;
+                if (dir.dr >= 0) {
+                    rowMin = 0;
+                    rowMax = numRows - 1;
+                } else {
+                    rowMin = (len - 1) * Math.abs(dir.dr);
+                    rowMax = size - 1;
+                }
+                if (dir.dc >= 0) {
+                    colMin = 0;
+                    colMax = numCols - 1;
+                } else {
+                    colMin = (len - 1) * Math.abs(dir.dc);
+                    colMax = size - 1;
+                }
+
+                const sr = Math.floor(Math.random() * (rowMax - rowMin + 1)) + rowMin;
+                const sc = Math.floor(Math.random() * (colMax - colMin + 1)) + colMin;
+
+                let canPlace = true;
+                for (let k = 0; k < len; k++) {
+                    const r = sr + k * dir.dr;
+                    const c = sc + k * dir.dc;
+                    if (grid[r][c] && grid[r][c] !== word[k]) {
+                        canPlace = false;
+                        break;
+                    }
+                }
+
+                if (canPlace) {
+                    for (let k = 0; k < len; k++) {
+                        const r = sr + k * dir.dr;
+                        const c = sc + k * dir.dc;
+                        grid[r][c] = word[k];
+                    }
+                    return { start: [sr, sc], dir: dir };
+                }
+            }
+            return null;
+        }
+
+        function generateGrid() {
+            const size = 5;
+            let grid = Array.from({ length: size }, () => Array(size).fill(null));
+            const baseWords = ['CAT', 'DOG', 'BIRD', 'FISH', 'FROG'];
+            const shuffledWords = shuffle([...baseWords]);
+            const placedWords = [];
+
+            for (let word of shuffledWords) {
+                const placed = placeWord(grid, word, size);
+                if (placed) {
+                    placedWords.push(word);
+                    wordPositions[word] = placed;
+                } else {
+                    console.warn(`Could not place word: ${word}`);
+                }
+            }
+
+            // Use placed words
+            words = placedWords;
+
+            // Fill empty cells with random letters
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    if (grid[i][j] === null) {
+                        grid[i][j] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                }
+            }
+
+            return grid;
+        }
+
+        // Start game
+        async function startGame() {
+            // Show game UI
+            document.getElementById('welcome-section').classList.add('hidden');
+            document.getElementById('game-stats').classList.remove('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            document.getElementById('words-section').classList.remove('hidden');
+
+            try {
+                // Mock game data - replace with actual API call
+                const baseWords = ['CAT', 'DOG', 'BIRD', 'FISH', 'FROG'];
+                const mockGameData = {
+                    game_id: 'mock_' + Date.now(),
+                    grid: generateGrid(),
+                    words: words, // Now set by generateGrid
+                    word_details: {
+                        'CAT': { definition: 'A small domesticated carnivorous mammal', example: 'The cat chased the mouse.' },
+                        'DOG': { definition: 'A domesticated carnivorous mammal', example: 'The dog barked loudly.' },
+                        'BIRD': { definition: 'A warm-blooded egg-laying vertebrate', example: 'The bird flew high in the sky.' },
+                        'FISH': { definition: 'A limbless cold-blooded vertebrate animal', example: 'The fish swam in the pond.' },
+                        'FROG': { definition: 'A tailless amphibian', example: 'The frog jumped into the water.' }
+                    }
+                };
+
+                gameId = mockGameData.game_id;
+                grid = mockGameData.grid;
+                wordDetails = mockGameData.word_details;
+                foundWords.clear();
+                wordPositions = {}; // Reset
+                selectedCells = [];
+                hintsUsed = 0;
+                score = 0;
+
+                renderGrid();
+                renderWords();
+                updateStats();
+                resetTimer();
+
+            } catch (error) {
+                console.error('Error starting game:', error);
+                showMessage('Failed to start game. Please try again.', 'error');
+            }
+        }
+
+        // Grid rendering and interaction
+        function renderGrid() {
+            const container = document.getElementById('grid-container');
+            container.innerHTML = '';
+            container.style.gridTemplateColumns = `repeat(${grid.length}, 1fr)`;
+
+            grid.forEach((row, i) => {
+                row.forEach((letter, j) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = letter;
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+
+                    // Mouse events
+                    cell.addEventListener('mousedown', startSelection);
+                    cell.addEventListener('mouseenter', continueSelection);
+                    cell.addEventListener('mouseup', endSelection);
+
+                    // Touch events
+                    cell.addEventListener('touchstart', handleTouchStart, {passive: false});
+                    cell.addEventListener('touchmove', handleTouchMove, {passive: false});
+                    cell.addEventListener('touchend', handleTouchEnd, {passive: false});
+
+                    container.appendChild(cell);
+                });
+            });
+
+            document.addEventListener('mouseup', endSelection);
+            document.addEventListener('touchend', handleTouchEnd);
+        }
+
+        function startSelection(e) {
+            isSelecting = true;
+            selectedCells = [];
+            clearSelection();
+            selectCell(e.target);
+        }
+
+        function continueSelection(e) {
+            if (isSelecting) {
+                selectCell(e.target);
+            }
+        }
+
+        function endSelection() {
+            if (isSelecting && selectedCells.length > 0) {
+                checkWord();
+            }
+            isSelecting = false;
+        }
+
+        // Touch handlers
+        function handleTouchStart(e) {
+            e.preventDefault();
+            isSelecting = true;
+            selectedCells = [];
+            clearSelection();
+            selectCell(e.target);
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!isSelecting) return;
+
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (element && element.classList.contains('cell')) {
+                selectCell(element);
+            }
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            if (isSelecting && selectedCells.length > 0) {
+                checkWord();
+            }
+            isSelecting = false;
+        }
+
+        function selectCell(cell) {
+            if (!cell.classList.contains('cell')) return;
+
+            const position = [parseInt(cell.dataset.row), parseInt(cell.dataset.col)];
+            
+            const alreadySelected = selectedCells.some(
+                pos => pos[0] === position[0] && pos[1] === position[1]
+            );
+
+            if (!alreadySelected) {
+                if (selectedCells.length > 0 && !isValidSelection(position)) {
+                    return;
+                }
+                
+                selectedCells.push(position);
+                cell.classList.add('selected');
+            }
+        }
+
+        function isValidSelection(newPosition) {
+            if (selectedCells.length === 0) return true;
+            
+            const lastPosition = selectedCells[selectedCells.length - 1];
+            const [lastRow, lastCol] = lastPosition;
+            const [newRow, newCol] = newPosition;
+            
+            const rowDiff = Math.abs(newRow - lastRow);
+            const colDiff = Math.abs(newCol - lastCol);
+            
+            return rowDiff <= 1 && colDiff <= 1 && (rowDiff > 0 || colDiff > 0);
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.cell.selected').forEach(cell => {
+                if (!cell.classList.contains('found')) {
+                    cell.classList.remove('selected');
+                }
+            });
+            document.querySelectorAll('.cell.hint').forEach(cell => {
+                cell.classList.remove('hint');
+            });
+            selectedCells = [];
+        }
+
+        // Word checking
+        async function checkWord() {
+            if (selectedCells.length < 3) {
+                clearSelection();
+                return;
+            }
+
+            const first = selectedCells[0];
+            const last = selectedCells[selectedCells.length - 1];
+            const len = selectedCells.length;
+            const dRow = last[0] - first[0];
+            const dCol = last[1] - first[1];
+            const stepR = len > 1 ? dRow / (len - 1) : 0;
+            const stepC = len > 1 ? dCol / (len - 1) : 0;
+
+            if (stepR !== Math.round(stepR) || stepC !== Math.round(stepC) || Math.abs(stepR) > 1 || Math.abs(stepC) > 1) {
+                clearSelection();
+                showMessage('Must select in a straight line!', 'error');
+                return;
+            }
+
+            const expectedStepR = Math.round(stepR);
+            const expectedStepC = Math.round(stepC);
+
+            const selectedWord = selectedCells.map(([row, col]) => grid[row][col]).join('');
+            const reverseWord = selectedWord.split('').reverse().join('');
+            if (!words.includes(selectedWord) && !words.includes(reverseWord)) {
+                clearSelection();
+                showMessage('Word not found. Try again!', 'error');
+                return;
+            }
+
+            const actualWord = selectedWord === reverseWord ? selectedWord : (words.includes(selectedWord) ? selectedWord : reverseWord);
+            if (foundWords.has(actualWord)) {
+                clearSelection();
+                showMessage('Word already found!', 'error');
+                return;
+            }
+
+            // Verify positions are exactly on the line
+            for (let k = 0; k < len; k++) {
+                const expectedR = first[0] + k * expectedStepR;
+                const expectedC = first[1] + k * expectedStepC;
+                const actual = selectedCells[k];
+                if (actual[0] !== expectedR || actual[1] !== expectedC) {
+                    clearSelection();
+                    showMessage('Invalid selection path!', 'error');
+                    return;
+                }
+            }
+
+            // Valid
+            foundWords.add(actualWord);
+            markAsFound(selectedCells);
+            renderWords();
+            updateStats();
+            updateScore(actualWord);
+            showLearningContent(actualWord);
+            showMessage(`Great! Found "${actualWord}"!`, 'success');
+
+            if (foundWords.size === words.length) {
+                stopTimer();
+                showCompletionCelebration();
+            }
+        }
+
+        function markAsFound(positions) {
+            positions.forEach(([row, col]) => {
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                cell.classList.add('found');
+                cell.classList.remove('selected');
+            });
+
+            selectedCells = [];
+        }
+
+        function showLearningContent(word) {
+            const learningDiv = document.getElementById('word-learning');
+            const details = wordDetails[word] || {};
+            
+            learningDiv.innerHTML = `
+                <div class="word-definition">
+                    <strong>${word}</strong>: ${details.definition || 'Great word!'}
+                </div>
+                ${details.example ? `<div class="word-example">Example: "${details.example}"</div>` : ''}
+            `;
+            learningDiv.classList.remove('hidden');
+        }
+
+        // Hint system
+        async function getHint() {
+            if (hintCooldown) {
+                showMessage('Please wait before getting another hint', 'error');
+                return;
+            }
+
+            try {
+                const unfoundWord = words.find(word => !foundWords.has(word));
+                if (!unfoundWord) {
+                    showMessage('All words found!', 'success');
+                    return;
+                }
+
+                const pos = wordPositions[unfoundWord];
+                if (pos) {
+                    const { start } = pos;
+                    const cell = document.querySelector(`[data-row="${start[0]}"][data-col="${start[1]}"]`);
+                    if (cell && !cell.classList.contains('found')) {
+                        cell.classList.add('hint');
+                        setTimeout(() => {
+                            if (cell) cell.classList.remove('hint');
+                        }, 3000);
+                    }
+                }
+
+                showMessage(`Hint for "${unfoundWord}"`, 'success');
+                hintsUsed++;
+                updateStats();
+                
+                hintCooldown = true;
+                setTimeout(() => {
+                    hintCooldown = false;
+                }, 10000);
+            } catch (error) {
+                console.error('Error getting hint:', error);
+                showMessage('Error getting hint. Please try again.', 'error');
+            }
+        }
+
+        function renderWords() {
+            const container = document.getElementById('words-tags');
+            container.innerHTML = '';
+
+            words.forEach(word => {
+                const tag = document.createElement('div');
+                tag.className = 'bg-white px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium transition-colors word-tag';
+                tag.textContent = word;
+                tag.dataset.word = word;
+                
+                if (foundWords.has(word)) {
+                    tag.classList.add('found');
+                }
+                
+                container.appendChild(tag);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('found-count').textContent = foundWords.size;
+            document.getElementById('total-count').textContent = words.length;
+            document.getElementById('score').textContent = score;
+            document.getElementById('hints-used').textContent = hintsUsed;
+        }
+
+        function updateScore(word) {
+            const difficulty = 'medium'; // Hardcoded since settings removed
+            const baseScore = word.length * 10;
+            const difficultyMultiplier = { easy: 0.8, medium: 1, hard: 1.5 }[difficulty] || 1;
+            score += Math.floor(baseScore * difficultyMultiplier);
+        }
+
+        // Message system
+        function showMessage(text, type) {
+            const overlay = document.getElementById('message-overlay');
+            const icon = document.getElementById('message-icon');
+            const messageText = document.getElementById('message-text');
+
+            if (type === 'success') {
+                icon.innerHTML = '<svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                icon.className = 'w-12 h-12 mx-auto mb-4 text-green-500';
+            } else {
+                icon.innerHTML = '<svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                icon.className = 'w-12 h-12 mx-auto mb-4 text-red-500';
+            }
+            messageText.textContent = text;
+            
+            overlay.classList.remove('hidden');
+            
+            setTimeout(() => {
+                if (!overlay.classList.contains('hidden')) {
+                    closeMessage();
+                }
+            }, 2000);
+        }
+
+        function closeMessage() {
+            document.getElementById('message-overlay').classList.add('hidden');
+        }
+
+        // Timer functions
+        function resetTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function getElapsedTime() {
+            if (!startTime) return '0:00';
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Completion celebration
+        function showCompletionCelebration() {
+            const celebration = document.getElementById('completion-celebration');
+            document.getElementById('celebration-time').textContent = getElapsedTime();
+            document.getElementById('celebration-score').textContent = score;
+            document.getElementById('celebration-hints').textContent = hintsUsed;
+            
+            celebration.classList.remove('hidden');
+        }
+
+        function closeCelebration() {
+            document.getElementById('completion-celebration').classList.add('hidden');
+            newGame();
+        }
+
+        function newGame() {
+            // Reset UI
+            document.getElementById('game-stats').classList.add('hidden');
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('words-section').classList.add('hidden');
+            document.getElementById('welcome-section').classList.remove('hidden');
+            
+            stopTimer();
+            closeMessage();
+            clearSelection();
+        }
+
+        function goBack() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            window.history.back();
+        }
+
+        function goToHome() {
+            window.location.href = '/';
+        }
+
+        function goToGames() {
+            window.location.href = '/games';
+        }
+
+        function goToProfile() {
+            window.location.href = '/profile';
+        }
+
+        // Initialize the game
+    // Category selection removed, so no initialization needed
+    </script>
+</body>
+</html>

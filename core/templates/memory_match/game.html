@@ -1,0 +1,623 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Match Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .card {
+            transition: all 0.3s ease;
+            perspective: 1000px;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.4s;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .card-front {
+            background: rgb(194, 220, 252);
+            color: #06b6d4;
+        }
+        .card-back {
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+            color: white;
+            transform: rotateY(180deg);
+            font-size: 2rem;
+        }
+        .preview-mode .card .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card.matched {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.7);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        @media (max-width: 640px) {
+            .card-back {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="max-w-2xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center mb-4 sm:mb-6">
+            <a href="{% url 'games_page' %}" class="text-gray-600 hover:text-gray-800 mr-3 sm:mr-4">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">Memory Match</h1>
+            <div class="ml-auto text-sm text-gray-600">
+                Level <span id="current-level">1</span>
+            </div>
+        </div>
+
+        <!-- Game Info Card -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4">
+            <!-- Title Row -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center text-orange-500">
+                    <span class="text-2xl sm:text-3xl mr-2">🧩</span>
+                    <span class="font-semibold text-base sm:text-lg">Memory Match</span>
+                </div>
+                <div class="text-sm sm:text-base text-gray-600 font-medium">
+                    <span id="score">0</span>/<span id="total-pairs">4</span>
+                </div>
+            </div>
+
+            <!-- AI Buddy Header -->
+            <div class="bg-gradient-to-r from-orange-400 to-red-500 rounded-xl p-4 flex items-center justify-between text-white shadow-md">
+                <div class="flex items-center flex-1">
+                    <span class="text-3xl sm:text-4xl mr-3">🦉</span>
+                    <div>
+                        <div class="font-bold text-base sm:text-lg">AI Buddy Memory!</div>
+                        <div class="text-xs sm:text-sm opacity-90">Find all matching pairs</div>
+                    </div>
+                </div>
+                <div class="text-right ml-4">
+                    <div class="text-xs sm:text-sm opacity-90">Moves:</div>
+                    <div class="font-bold text-2xl sm:text-3xl" id="moves">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Board -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4 flex-1" id="game-board-container">
+            <div id="game-board" class="grid gap-2 sm:gap-3 h-full">
+                <!-- Cards will be dynamically generated here -->
+            </div>
+        </div>
+
+        <!-- Buddy's Tip -->
+        <div class="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-4 mb-4 flex items-start shadow-sm border border-amber-100">
+            <span class="text-3xl sm:text-4xl mr-3 flex-shrink-0">🦉</span>
+            <div>
+                <div class="font-bold text-gray-800 mb-1 text-sm sm:text-base">Buddy's Tip:</div>
+                <div class="text-xs sm:text-sm text-gray-600" id="tip">Focus and remember where each card is located!</div>
+            </div>
+        </div>
+
+         <!-- Controls -->
+        <div class="flex gap-3">
+            <button onclick="useHint()" class="flex-1 bg-gradient-to-r from-orange-400 to-orange-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                💡 Hint
+            </button>
+            <button onclick="showResetModal()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                🔄 Clear
+            </button>
+            <button onclick="toggleSound()" id="sound-btn" class="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                🔊 Sound
+            </button>
+        </div>
+    </div>
+
+    <!-- Congratulations Modal -->
+    <div id="congrats-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2" id="modal-title">Level Complete!</h2>
+            <p class="text-gray-600 mb-6" id="modal-message">Great job! You completed this level.</p>
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <div class="text-3xl font-bold text-orange-500" id="modal-moves">0</div>
+                <div class="text-sm text-gray-600">Total Moves</div>
+            </div>
+            <button onclick="nextLevel()" class="w-full bg-gradient-to-r from-orange-400 to-red-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="reset-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4">⚠️</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Reset Level?</h2>
+            <p class="text-gray-600 mb-6">Are you sure you want to reset the current level? All progress will be lost.</p>
+            <div class="flex gap-3">
+                <button onclick="hideResetModal()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                    Cancel
+                </button>
+                <button onclick="resetLevel()" class="flex-1 bg-gradient-to-r from-orange-400 to-red-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exit Confirmation Modal -->
+    <div id="exit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4">🚪</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Exit Game?</h2>
+            <p class="text-gray-600 mb-6">Your progress will be saved. You can continue from this level when you return.</p>
+            <div class="flex gap-3">
+                <button onclick="hideExitModal()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                    Cancel
+                </button>
+                <button onclick="exitGame()" class="flex-1 bg-gradient-to-r from-orange-400 to-red-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                    Exit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="bg-music" loop>
+        <source src="{% static 'sounds/sounds.mp3' %}" type="audio/mpeg">
+    </audio>
+    <audio id="success-sound">
+        <source src="{% static 'sounds/yay.mp3' %}" type="audio/mpeg">
+    </audio>
+
+    <script>
+        let currentLevel = 1;
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let canFlip = false;
+        let soundEnabled = true;
+        let gameSessionId = null;
+        let bgMusic = document.getElementById('bg-music');
+        let successSound = document.getElementById('success-sound');
+
+        // Generate unique session ID
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Game state management
+        const STORAGE_KEY = 'memoryGameState';
+
+        function saveGameState() {
+            const state = {
+                currentLevel,
+                cards,
+                matchedPairs,
+                moves,
+                flippedIndices: Array.from(document.querySelectorAll('.card.matched')).map(c => c.dataset.index),
+                timestamp: Date.now(),
+                sessionId: gameSessionId
+            };
+            
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                
+                // Also save to database
+                if (gameSessionId) {
+                    const cardsData = {
+                        matched: Array.from(document.querySelectorAll('.card.matched')).map(c => c.dataset.index),
+                        flipped: flippedCards
+                    };
+                    
+                    fetch('/api/save-game/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            session_id: gameSessionId,
+                            level: currentLevel,
+                            moves: moves,
+                            matched_pairs: matchedPairs,
+                            cards_data: cardsData
+                        })
+                    }).catch(error => console.error('Failed to save to database:', error));
+                }
+            } catch (e) {
+                console.error('Failed to save game state:', e);
+            }
+        }
+
+        function loadGameState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    // Load saved state if it's from the same session
+                    if (state.sessionId === gameSessionId) {
+                        return state;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load game state:', e);
+            }
+            return null;
+        }
+
+        function clearGameState() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+                if (gameSessionId) {
+                    // Mark session as inactive in database
+                    fetch('/api/complete-level/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            session_id: gameSessionId,
+                            level: currentLevel,
+                            moves: moves
+                        })
+                    }).catch(error => console.error('Failed to clear database state:', error));
+                }
+            } catch (e) {
+                console.error('Failed to clear game state:', e);
+            }
+        }
+
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        async function loadLevel(level, restoreState = null) {
+            try {
+                console.log('Loading level:', level);
+                
+                // For level 6 and beyond, keep shuffling level 6 cards
+                const actualLevel = Math.min(level, 6);
+                
+                const response = await fetch(`/api/level/?level=${actualLevel}`);
+                
+                if (!response.ok) {
+                    console.error('API response not OK:', response.status);
+                    throw new Error('Failed to load level data');
+                }
+                
+                const data = await response.json();
+                console.log('Level data received:', data);
+                
+                currentLevel = level;
+                cards = data.cards;
+                
+                if (restoreState) {
+                    matchedPairs = restoreState.matchedPairs;
+                    moves = restoreState.moves;
+                } else {
+                    matchedPairs = 0;
+                    moves = 0;
+                    flippedCards = [];
+                }
+                
+                document.getElementById('moves').textContent = moves;
+                document.getElementById('score').textContent = matchedPairs;
+                document.getElementById('total-pairs').textContent = data.total_pairs;
+                document.getElementById('current-level').textContent = level;
+                
+                renderBoard(data.rows, data.cols, data.cards);
+                
+                if (restoreState) {
+                    // Restore matched cards
+                    restoreState.flippedIndices.forEach(index => {
+                        const card = document.querySelector(`[data-index="${index}"]`);
+                        if (card) {
+                            card.classList.add('matched');
+                        }
+                    });
+                    canFlip = true;
+                } else {
+                    showPreview();
+                }
+                
+                saveGameState();
+            } catch (error) {
+                console.error('Error loading level:', error);
+                showErrorModal('Error loading game. Please refresh the page.');
+            }
+        }
+
+        function renderBoard(rows, cols, cardData) {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+            board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            board.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+            
+            console.log(`Rendering board: ${rows}x${cols} with ${cardData.length} cards`);
+            
+            cardData.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.className = 'card cursor-pointer';
+                card.dataset.index = index;
+                card.dataset.emoji = emoji;
+                card.style.aspectRatio = '1';
+                card.innerHTML = `
+                    <div class="card-inner h-full">
+                        <div class="card-front">
+                            ?
+                        </div>
+                        <div class="card-back">
+                            ${emoji}
+                        </div>
+                    </div>
+                `;
+                card.addEventListener('click', () => flipCard(index));
+                board.appendChild(card);
+            });
+            
+            console.log('Board rendered with', board.children.length, 'cards');
+        }
+
+        function showPreview() {
+            const board = document.getElementById('game-board');
+            board.classList.add('preview-mode');
+            canFlip = false;
+            
+            setTimeout(() => {
+                board.classList.remove('preview-mode');
+                canFlip = true;
+                console.log('Preview ended, cards can now be flipped');
+            }, 2500);
+        }
+
+        function flipCard(index) {
+            if (!canFlip || flippedCards.length >= 2) return;
+            
+            const card = document.querySelector(`[data-index="${index}"]`);
+            if (!card || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            
+            card.classList.add('flipped');
+            flippedCards.push(index);
+            
+            if (flippedCards.length === 2) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                canFlip = false;
+                
+                setTimeout(checkMatch, 1000);
+            }
+            
+            saveGameState();
+        }
+
+        function checkMatch() {
+            const [index1, index2] = flippedCards;
+            const card1 = document.querySelector(`[data-index="${index1}"]`);
+            const card2 = document.querySelector(`[data-index="${index2}"]`);
+            
+            if (!card1 || !card2) {
+                flippedCards = [];
+                canFlip = true;
+                return;
+            }
+            
+            if (card1.dataset.emoji === card2.dataset.emoji) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                document.getElementById('score').textContent = matchedPairs;
+                
+                if (matchedPairs === cards.length / 2) {
+                    setTimeout(() => {
+                        showCongratsModal();
+                    }, 500);
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                }, 600);
+            }
+            
+            flippedCards = [];
+            canFlip = true;
+            saveGameState();
+        }
+
+        function showCongratsModal() {
+            if (soundEnabled) {
+                successSound.play();
+            }
+            
+            const modal = document.getElementById('congrats-modal');
+            const title = document.getElementById('modal-title');
+            const message = document.getElementById('modal-message');
+            const movesDisplay = document.getElementById('modal-moves');
+            
+            title.textContent = `Level ${currentLevel} Complete! 🎉`;
+            message.textContent = `Awesome! You matched all pairs!`;
+            movesDisplay.textContent = moves;
+            
+            modal.classList.add('active');
+        }
+
+        function nextLevel() {
+            const modal = document.getElementById('congrats-modal');
+            modal.classList.remove('active');
+            loadLevel(currentLevel + 1);
+        }
+
+        function useHint() {
+            const unmatched = Array.from(document.querySelectorAll('.card:not(.matched):not(.flipped)'));
+            if (unmatched.length >= 2) {
+                const randomCard = unmatched[Math.floor(Math.random() * unmatched.length)];
+                randomCard.classList.add('flipped');
+                setTimeout(() => {
+                    randomCard.classList.remove('flipped');
+                }, 1200);
+            } else {
+                showErrorModal('No more hints available! Keep matching!');
+            }
+        }
+
+        function showResetModal() {
+            document.getElementById('reset-modal').classList.add('active');
+        }
+
+        function hideResetModal() {
+            document.getElementById('reset-modal').classList.remove('active');
+        }
+
+        function resetLevel() {
+            hideResetModal();
+            loadLevel(currentLevel);
+        }
+
+        function showExitModal() {
+            document.getElementById('exit-modal').classList.add('active');
+        }
+
+        function hideExitModal() {
+            document.getElementById('exit-modal').classList.remove('active');
+        }
+
+        function exitGame() {
+            saveGameState();
+            window.location.href = '/'; // Redirect to home or previous page
+        }
+
+        function showErrorModal(message) {
+            // Create a simple error modal
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="text-6xl mb-4">❌</div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Notice</h2>
+                    <p class="text-gray-600 mb-6">${message}</p>
+                    <button onclick="this.closest('.modal-overlay').remove()" class="w-full bg-gradient-to-r from-orange-400 to-red-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                        OK
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const button = document.getElementById('sound-btn');
+            
+            if (soundEnabled) {
+                button.innerHTML = '🔊 Sound';
+                bgMusic.play();
+            } else {
+                button.innerHTML = '🔇 Sound';
+                bgMusic.pause();
+            }
+        }
+
+        // Initialize game on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Page loaded, initializing game...');
+            
+            // Generate new session ID
+            gameSessionId = generateSessionId();
+            console.log('Game session ID:', gameSessionId);
+            
+            // Try to restore previous game state from same session
+            const savedState = loadGameState();
+            if (savedState) {
+                console.log('Restoring saved game state');
+                loadLevel(savedState.currentLevel, savedState);
+            } else {
+                loadLevel(1);
+            }
+            
+            // Start background music
+            if (soundEnabled) {
+                bgMusic.volume = 0.3;
+                bgMusic.play().catch(e => console.log('Autoplay blocked:', e));
+            }
+        });
+
+        // Save state before page unload
+        window.addEventListener('beforeunload', saveGameState);
+
+        // Clear game state when navigating away (but not on refresh)
+        window.addEventListener('pagehide', () => {
+            // This will trigger when user leaves the page
+            clearGameState();
+        });
+    </script>
+</body>
+</html>
