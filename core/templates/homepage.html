@@ -1,0 +1,250 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Load Poppins as primary font, Maria as secondary -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/maria-2" rel="stylesheet">
+  
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  
+  <style>
+    /* Poppins as primary font for body */
+    body {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+    }
+    
+    /* Maria for specific decorative elements */
+    .font-maria {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+    }
+    
+    /* Poppins for consistent UI */
+    .font-poppins {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+    }
+    
+    /* Typography styles */
+    .heading-primary {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    
+    .heading-secondary {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .btn-play {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-play:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .icon-shadow {
+      box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 
+                  -2px -2px 4px rgba(0, 0, 0, 0.2), 
+                  3px 3px 6px rgba(0, 0, 0, 0.1), 
+                  -3px -3px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .content-container {
+      padding-bottom: 3.5rem; /* Space for fixed bottom nav */
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      .heading-primary {
+        font-size: 1.125rem;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-poppins">
+  <div class="content-container overflow-y-auto h-screen p-3">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center">
+        <i class='bx bx-graduation text-gray-600 text-2xl mr-2'></i>
+        <a href="{% url 'profile' %}" class="flex items-center">
+        <img src="{% static 'avatars/58509042_9439833.jpg'%}" alt="Profile" class="rounded-full mr-2" style="width: 40px;">
+        </a>
+        <div>
+          <p class="text-red-500 font-maria font-bold text-base">Hello, {{user.username}} 👋🏻</p>
+          <p class="text-gray-600 text-xs font-poppins">Choose what you want to learn today</p>
+        </div>
+      </div>
+      <a href="{% url 'logout' %}" class="flex space-x-2">
+        <i class='bx bx-log-out-circle text-gray-600 text-xl'></i>
+      </a>
+    </div>
+    
+    <div class="mb-3">
+      <div class="relative">
+        <i class='bx bx-search text-gray-600 text-lg absolute left-2 top-2'></i>
+        <input type="text" placeholder="Search" class="w-full p-1.5 pl-7 rounded-lg border border-gray-300 text-sm font-poppins">
+      </div>
+    </div>
+    
+    <div class="bg-gradient-to-r from-purple-600 to-red-500 text-white p-3 rounded-lg mb-3 flex items-center justify-between">
+      <div class="flex flex-col">
+        <h2 class="font-maria heading-primary">Today's Recommendation</h2>
+        <p class="text-xs font-poppins">Try the Riddles Game!</p>
+        <a href="{% url 'riddles' %}" class="bg-white text-purple-600 px-3 py-1 rounded mt-1.5 text-sm font-poppins btn-play self-start">
+          Start Playing
+        </a>
+      </div>
+      <img src="{% static 'Untitled-1.png' %}" style="width: 90px;" alt="Robot" class="flex-shrink-0">
+    </div>
+    
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="font-poppins heading-secondary">Subjects</h2>
+      <a href="#" class="text-blue-500 text-sm font-poppins hover:underline">See more</a>
+    </div>
+    
+    <div class="flex flex-row flex-wrap gap-0 mb-3">
+      <div class="text-center flex-1 min-w-[70px]">
+        <div class="bg-blue-200 w-10 h-10 flex items-center justify-center rounded-full icon-shadow mx-auto mb-1">
+          <i class='bx bx-calculator text-gray-600 text-2xl'></i>
+        </div>
+        <p class="text-sm font-poppins"></p>
+      </div>
+      <div class="text-center flex-1 min-w-[70px]">
+        <div class="bg-purple-200 w-10 h-10 flex items-center justify-center rounded-full icon-shadow mx-auto mb-1">
+          <i class='bx bx-atom text-gray-600 text-2xl'></i>
+        </div>
+        <p class="text-sm font-poppins"></p>
+      </div>
+      <div class="text-center flex-1 min-w-[70px]">
+        <div class="bg-red-200 w-10 h-10 flex items-center justify-center rounded-full icon-shadow mx-auto mb-1">
+          <i class='bx bx-book-open text-gray-600 text-2xl'></i>
+        </div>
+        <p class="text-sm font-poppins"></p>
+      </div>
+      <div class="text-center flex-1 min-w-[70px]">
+        <div class="bg-yellow-200 w-10 h-10 flex items-center justify-center rounded-full icon-shadow mx-auto mb-1">
+          <i class='bx bx-globe text-gray-600 text-2xl'></i>
+        </div>
+        <p class="text-sm font-poppins"></p>
+      </div>
+      <div class="text-center flex-1 min-w-[70px]">
+        <div class="bg-green-200 w-10 h-10 flex items-center justify-center rounded-full icon-shadow mx-auto mb-1">
+          <i class='bx bx-leaf text-gray-600 text-2xl'></i>
+        </div>
+        <p class="text-sm font-poppins"></p>
+      </div>
+    </div>
+    
+    <h2 class="font-poppins heading-primary mb-3">Games & Activities</h2>
+    
+    <div class="space-y-3">
+      <!-- Riddles Game - NEW ADDITION -->
+      <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-purple-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-question-mark text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Riddles Game</h3>
+          <p class="text-xs font-poppins">Solve fun brain teasers and puzzles! Test your thinking skills with challenging riddles that will make you think outside the box.</p>
+          <a href="{% url 'riddles' %}" class="bg-white text-purple-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Quiz Game -->
+      <div class="bg-blue-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-blue-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-brain text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Quiz Game</h3>
+          <p class="text-xs font-poppins">Test your knowledge with fun and challenging questions! Play this quiz game to learn new facts and sharpen your mind.</p>
+          <a href="{% url 'quizes' %}" class="bg-white text-blue-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Math Game -->
+      <div class="bg-purple-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-purple-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-calculator text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Math Game</h3>
+          <p class="text-xs font-poppins">Solve fun math puzzles to boost your number skills! Practice addition, subtraction, and more in this exciting challenge.</p>
+          <a href="{% url 'math_game' %}" class="bg-white text-purple-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Sentence Builder -->
+      <div class="bg-red-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-red-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-message-square-detail text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Sentence Builder</h3>
+          <p class="text-xs font-poppins">Arrange words to create correct sentences! This game helps you improve grammar and sentence structure with fun challenges.</p>
+          <a href="{% url 'sentence_builder' %}" class="bg-white text-red-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Memory Game -->
+      <div class="bg-green-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-green-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-memory-card text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Memory Game</h3>
+          <p class="text-xs font-poppins">Test and improve your memory skills! Flip cards to find matching pairs in this fun and engaging memory challenge.</p>
+          <a href="{% url 'game' %}" class="bg-white text-green-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Color Game -->
+      <div class="bg-yellow-500 text-white p-3 rounded-lg flex items-center">
+        <div class="bg-yellow-500 w-14 h-14 sm:w-16 sm:h-16 rounded-full icon-shadow mr-3 flex items-center justify-center flex-shrink-0">
+          <i class='bx bx-palette text-white text-3xl sm:text-4xl'></i>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-maria text-lg font-bold">Color Game</h3>
+          <p class="text-xs font-poppins">Learn colors and their names with fun activities! This game is perfect for kids to explore the world of colors.</p>
+          <a href="{% url 'color_game' %}" class="bg-white text-yellow-500 rounded mt-1.5 inline-flex items-center px-3 py-1 btn-play">
+            <i class='bx bx-play-circle mr-2'></i>
+            <span>Start Playing</span>
+          </a>
+        </div>
+      </div>
+      <br>
+      <br>
+      <br>
+    </div>
+  </div>
+  
+  <!-- Bottom Navigation -->
+{% include 'bottom_nav.html' %}
+</body>
+</html>

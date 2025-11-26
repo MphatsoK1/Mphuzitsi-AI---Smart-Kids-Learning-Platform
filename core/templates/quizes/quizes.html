@@ -1,0 +1,796 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Poppins', sans-serif;
+        }
+        .option-button {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-weight: 500;
+        }
+        .option-button:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+        }
+        .option-button.selected {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .option-button.correct {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        .option-button.incorrect {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        .option-letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            margin-right: 12px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .option-button.selected .option-letter {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .option-button.correct .option-letter,
+        .option-button.incorrect .option-letter {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .feedback-correct {
+            color: #10b981;
+            font-weight: bold;
+            animation: bounce 0.5s ease;
+        }
+        .feedback-wrong {
+            color: #ef4444;
+            font-weight: bold;
+            animation: shake 0.5s ease;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 9999;
+            animation: confetti-fall 2s linear forwards;
+        }
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.7);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .difficulty-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .difficulty-easy { background: #d1fae5; color: #065f46; }
+        .difficulty-medium { background: #fef3c7; color: #92400e; }
+        .difficulty-hard { background: #fee2e2; color: #991b1b; }
+        .difficulty-expert { background: #e0e7ff; color: #3730a3; }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            transition: width 0.3s ease;
+        }
+        
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="max-w-2xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center mb-4 sm:mb-6">
+            <a href="{% url 'games_page' %}" class="text-gray-600 hover:text-gray-800 mr-3 sm:mr-4">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">Quiz Game</h1>
+            <div class="ml-auto text-sm text-gray-600">
+                Level <span id="current-level">1</span>
+            </div>
+        </div>
+
+        <!-- Game Info Card -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4">
+            <!-- Title Row -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center text-blue-500">
+                    <span class="text-2xl sm:text-3xl mr-2" id="category-icon">🧠</span>
+                    <span class="font-semibold text-base sm:text-lg" id="category-name">General Knowledge</span>
+                </div>
+                <div class="text-sm sm:text-base text-gray-600 font-medium">
+                    <span id="questions-answered">0</span>/<span id="questions-required">5</span>
+                </div>
+            </div>
+
+            <!-- AI Buddy Header -->
+            <div class="bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl p-4 flex items-center justify-between text-white shadow-md">
+                <div class="flex items-center flex-1">
+                    <span class="text-3xl sm:text-4xl mr-3">🧠</span>
+                    <div>
+                        <div class="font-bold text-base sm:text-lg">AI Buddy Quiz!</div>
+                        <div class="text-xs sm:text-sm opacity-90">Test your knowledge</div>
+                    </div>
+                </div>
+                <div class="text-right ml-4">
+                    <div class="text-xs sm:text-sm opacity-90">Score:</div>
+                    <div class="font-bold text-2xl sm:text-3xl" id="score">0</div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-4">
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Quiz Progress</span>
+                    <span id="progress-text">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="level-progress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer & Difficulty -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 flex items-center justify-between">
+            <div class="flex items-center text-orange-500">
+                <i class='bx bx-time text-xl mr-2'></i>
+                <span class="font-semibold" id="timer">05:00</span>
+            </div>
+            <div class="difficulty-badge" id="difficulty-badge">Easy</div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4 flex-1">
+            <div id="question-section">
+                <p class="text-center text-gray-600 text-sm font-medium mb-4">
+                    Choose the correct answer
+                </p>
+                
+                <div class="question-text mb-6 text-center" id="question-text">
+                    Loading question...
+                </div>
+                
+                <div id="options-container" class="space-y-3">
+                    <!-- Options will be dynamically generated here -->
+                </div>
+                
+                <div id="explanation" class="hidden mt-4 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-800 font-semibold">Explanation:</p>
+                    <p id="explanation-text" class="text-sm text-blue-700 mt-1"></p>
+                </div>
+                
+                <p class="text-base mt-4 text-center min-h-6" id="feedback"></p>
+            </div>
+        </div>
+
+        <!-- Buddy's Tip -->
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-4 flex items-start shadow-sm border border-blue-100">
+            <span class="text-3xl sm:text-4xl mr-3 flex-shrink-0">🧠</span>
+            <div>
+                <div class="font-bold text-gray-800 mb-1 text-sm sm:text-base">Buddy's Tip:</div>
+                <div class="text-xs sm:text-sm text-gray-600" id="tip">Read each question carefully before answering!</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex gap-3">
+            <button onclick="skipQuestion()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                <i class='bx bx-skip-next'></i> Skip
+            </button>
+            <button onclick="submitAnswer()" class="flex-1 bg-gradient-to-r from-green-400 to-green-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                <i class='bx bx-check-circle'></i> Submit
+            </button>
+            <button onclick="nextQuestion()" id="next-btn" class="flex-1 bg-gradient-to-r from-blue-400 to-blue-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition hidden">
+                <i class='bx bx-arrow-right'></i> Next
+            </button>
+        </div>
+    </div>
+
+    <!-- Level Complete Modal -->
+    <div id="level-complete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2" id="modal-title">Quiz Complete!</h2>
+            <p class="text-gray-600 mb-4" id="modal-message">Great job testing your knowledge!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-blue-500" id="modal-score">0</div>
+                    <div class="text-sm text-gray-600">Score</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-green-500" id="modal-correct">0</div>
+                    <div class="text-sm text-gray-600">Correct</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-purple-500" id="modal-accuracy">0%</div>
+                    <div class="text-sm text-gray-600">Accuracy</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-orange-500" id="modal-streak">0</div>
+                    <div class="text-sm text-gray-600">Best Streak</div>
+                </div>
+            </div>
+            
+            <button onclick="nextLevel()" class="w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                Continue to Next Level
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Complete Modal -->
+    <div id="game-complete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4">🏆</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Game Complete!</h2>
+            <p class="text-gray-600 mb-4">Amazing! You've completed all quiz levels!</p>
+            
+            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-4 mb-6 text-white">
+                <div class="text-3xl font-bold" id="final-score">0</div>
+                <div class="text-sm">Final Score</div>
+            </div>
+            
+            <button onclick="restartGame()" class="w-full bg-gradient-to-r from-green-400 to-green-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition mb-3">
+                Play Again
+            </button>
+            <button onclick="exitGame()" class="w-full bg-gray-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                Exit Game
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="correct-sound" src="{% static 'sounds/yay.mp3' %}"></audio>
+    <audio id="wrong-sound" src="{% static 'sounds/sounds.mp3' %}"></audio>
+    <audio id="level-complete-sound" src="{% static 'sounds/yay.mp3' %}"></audio>
+
+    <script>
+        // Game state
+        let currentLevel = 1;
+        let currentQuestionIndex = 0;
+        let questions = [];
+        let score = 0;
+        let questionsAnswered = 0;
+        let correctAnswers = 0;
+        let currentStreak = 0;
+        let bestStreak = 0;
+        let timer = 300;
+        let gameActive = false;
+        let sessionId = null;
+        let soundEnabled = true;
+        let selectedOption = null;
+        let answeredQuestionIds = []; // Track questions that have been answered
+
+        // DOM elements
+        const elements = {
+            score: document.getElementById('score'),
+            timer: document.getElementById('timer'),
+            questionText: document.getElementById('question-text'),
+            optionsContainer: document.getElementById('options-container'),
+            feedback: document.getElementById('feedback'),
+            explanation: document.getElementById('explanation'),
+            explanationText: document.getElementById('explanation-text'),
+            currentLevel: document.getElementById('current-level'),
+            questionsAnswered: document.getElementById('questions-answered'),
+            questionsRequired: document.getElementById('questions-required'),
+            levelProgress: document.getElementById('level-progress'),
+            progressText: document.getElementById('progress-text'),
+            difficultyBadge: document.getElementById('difficulty-badge'),
+            categoryName: document.getElementById('category-name'),
+            categoryIcon: document.getElementById('category-icon'),
+            tip: document.getElementById('tip'),
+            nextBtn: document.getElementById('next-btn')
+        };
+
+        // Audio elements
+        const correctSound = document.getElementById('correct-sound');
+        const wrongSound = document.getElementById('wrong-sound');
+        const levelCompleteSound = document.getElementById('level-complete-sound');
+
+        // Generate session ID
+        function generateSessionId() {
+            return 'quiz_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Initialize game
+        async function initGame() {
+            sessionId = generateSessionId();
+            
+            // Start game session
+            await fetch('/api/quizes/start-session/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    player_name: '{{ request.user.username|default:"Player" }}'
+                })
+            });
+            
+            loadLevel(1);
+        }
+
+        // Load level
+        async function loadLevel(level) {
+            try {
+                // Pass answered question IDs to avoid repetition
+                const answeredIdsParam = answeredQuestionIds.length > 0 
+                    ? '&answered_ids=' + answeredQuestionIds.join(',') 
+                    : '';
+                const response = await fetch(`/api/quizes/level/?level=${level}${answeredIdsParam}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showGameComplete();
+                    return;
+                }
+                
+                currentLevel = data.level_number;
+                questions = data.questions;
+                currentQuestionIndex = 0;
+                questionsAnswered = 0;
+                correctAnswers = 0;
+                currentStreak = 0;
+                timer = data.time_limit;
+                
+                // Update UI
+                elements.currentLevel.textContent = currentLevel;
+                elements.questionsRequired.textContent = data.questions_required;
+                elements.difficultyBadge.textContent = data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
+                elements.difficultyBadge.className = `difficulty-badge difficulty-${data.difficulty}`;
+                elements.categoryName.textContent = data.category;
+                elements.categoryIcon.textContent = data.icon;
+                
+                updateProgress();
+                loadQuestion();
+                startTimer();
+                gameActive = true;
+                
+            } catch (error) {
+                console.error('Error loading level:', error);
+            }
+        }
+
+    // Load current question
+    function loadQuestion() {
+        if (currentQuestionIndex >= questions.length) {
+            levelComplete();
+            return;
+        }
+        
+        const question = questions[currentQuestionIndex];
+        selectedOption = null;
+        
+        // Clear previous question state
+        elements.questionText.textContent = question.question_text;
+        elements.optionsContainer.innerHTML = ''; // This clears previous options
+        elements.feedback.textContent = '';
+        elements.explanation.classList.add('hidden');
+        elements.nextBtn.classList.add('hidden');
+        
+        // Remove any residual classes from options container
+        elements.optionsContainer.className = 'space-y-3';
+        
+        // Add AI indicator if it's an AI-generated question
+        if (question.is_ai) {
+            elements.questionText.innerHTML = question.question_text + ' <span class="text-xs text-blue-500">(AI Generated)</span>';
+        }
+        
+        updateProgress();
+        
+        // Create option buttons
+        const optionLetters = ['A', 'B', 'C', 'D'];
+        question.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.className = 'option-button w-full';
+            button.innerHTML = `
+                <span class="option-letter">${optionLetters[index]}</span>
+                ${option.text || option} <!-- Handle both object and string formats -->
+            `;
+            button.addEventListener('click', () => selectOption(optionLetters[index], button));
+            elements.optionsContainer.appendChild(button);
+        });
+        
+        // Reset any selected state
+        const buttons = elements.optionsContainer.querySelectorAll('.option-button');
+        buttons.forEach(btn => {
+            btn.classList.remove('selected', 'correct', 'incorrect');
+            btn.style.pointerEvents = 'auto';
+        });
+        
+        // Update tip
+        updateTip();
+    }
+
+        function selectOption(optionLetter, button) {
+            if (!gameActive || elements.nextBtn.classList.contains('hidden') === false) return;
+            
+            // Remove selected class from all buttons
+            const buttons = elements.optionsContainer.querySelectorAll('.option-button');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            // Add selected class to clicked button
+            button.classList.add('selected');
+            selectedOption = optionLetter;
+        }
+
+        // Submit answer
+        // Submit answer
+        function submitAnswer() {
+            if (!gameActive || !selectedOption) {
+                showFeedback('Please select an answer!', 'info');
+                return;
+            }
+            
+            questionsAnswered++;
+            const question = questions[currentQuestionIndex];
+            const isCorrect = selectedOption === question.correct_option;
+            
+            // Track this question as answered to avoid repetition
+            if (!answeredQuestionIds.includes(question.id)) {
+                answeredQuestionIds.push(question.id);
+            }
+            
+            // Disable all buttons immediately after submission
+            const buttons = elements.optionsContainer.querySelectorAll('.option-button');
+            buttons.forEach(btn => {
+                btn.style.pointerEvents = 'none';
+            });
+            
+            if (isCorrect) {
+                correctAnswers++;
+                currentStreak++;
+                bestStreak = Math.max(bestStreak, currentStreak);
+                score += question.points;
+                
+                // Bonus for streaks
+                if (currentStreak >= 3) score += 5;
+                if (currentStreak >= 5) score += 10;
+                
+                showFeedback('✓ Correct! Great job!', 'correct');
+                playSound(correctSound);
+                createConfetti();
+                
+                // Mark correct answer
+                buttons.forEach(button => {
+                    const letter = button.querySelector('.option-letter').textContent;
+                    if (letter === question.correct_option) {
+                        button.classList.add('correct');
+                    }
+                });
+                
+            } else {
+                currentStreak = 0;
+                showFeedback(`✗ Wrong! The correct answer was ${question.correct_option}`, 'wrong');
+                playSound(wrongSound);
+                
+                // Mark correct and incorrect answers
+                buttons.forEach(button => {
+                    const letter = button.querySelector('.option-letter').textContent;
+                    if (letter === question.correct_option) {
+                        button.classList.add('correct');
+                    } else if (letter === selectedOption) {
+                        button.classList.add('incorrect');
+                    }
+                });
+            }
+            
+            // Show explanation if available
+            if (question.explanation) {
+                elements.explanationText.textContent = question.explanation;
+                elements.explanation.classList.remove('hidden');
+            }
+            
+            elements.nextBtn.classList.remove('hidden');
+            updateProgress();
+        }
+
+        // Skip question
+        function skipQuestion() {
+            if (!gameActive) return;
+            
+            currentStreak = 0;
+            showFeedback('Question skipped', 'info');
+            speak('Question skipped.');
+            
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        // Next question
+        function nextQuestion() {
+            // Clear any existing feedback and reset state
+            elements.feedback.textContent = '';
+            elements.explanation.classList.add('hidden');
+            elements.nextBtn.classList.add('hidden');
+            
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        // Show feedback
+        function showFeedback(message, type) {
+            elements.feedback.textContent = message;
+            elements.feedback.className = type === 'correct' ? 'feedback-correct' : 
+                                       type === 'wrong' ? 'feedback-wrong' : 
+                                       'text-blue-500';
+        }
+
+        // Update progress
+        function updateProgress() {
+            elements.score.textContent = score;
+            elements.questionsAnswered.textContent = questionsAnswered;
+            
+            const progress = (questionsAnswered / parseInt(elements.questionsRequired.textContent)) * 100;
+            elements.levelProgress.style.width = `${progress}%`;
+            elements.progressText.textContent = `${Math.round(progress)}%`;
+        }
+
+        // Update tip
+        function updateTip() {
+            const tips = [
+                "Read all options before choosing your answer!",
+                "Eliminate obviously wrong answers first!",
+                "Trust your first instinct!",
+                "Look for keywords in the question!",
+                "Take your time and think carefully!"
+            ];
+            elements.tip.textContent = tips[Math.floor(Math.random() * tips.length)];
+        }
+
+        // Timer
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                if (timer > 0 && gameActive) {
+                    timer--;
+                    const minutes = Math.floor(timer / 60);
+                    const seconds = timer % 60;
+                    elements.timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else if (timer <= 0 && gameActive) {
+                    clearInterval(timerInterval);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function timeUp() {
+            gameActive = false;
+            showFeedback('⏰ Time\'s up! Quiz completed.', 'wrong');
+            setTimeout(levelComplete, 2000);
+        }
+
+        // Level complete
+        function levelComplete() {
+            gameActive = false;
+            playSound(levelCompleteSound);
+            
+            // Update progress in backend
+            updateGameProgress();
+            
+            const accuracy = questionsAnswered > 0 ? Math.round((correctAnswers / questionsAnswered) * 100) : 0;
+            
+            document.getElementById('modal-score').textContent = score;
+            document.getElementById('modal-correct').textContent = `${correctAnswers}/${questionsAnswered}`;
+            document.getElementById('modal-accuracy').textContent = accuracy + '%';
+            document.getElementById('modal-streak').textContent = bestStreak;
+            
+            document.getElementById('level-complete-modal').classList.add('active');
+        }
+
+        // Next level
+        async function nextLevel() {
+            document.getElementById('level-complete-modal').classList.remove('active');
+            
+            // Check if next level exists
+            const response = await fetch(`/api/quizes/next-level/?current_level=${currentLevel}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                showGameComplete();
+            } else {
+                loadLevel(currentLevel + 1);
+            }
+        }
+
+        // Show game complete
+        function showGameComplete() {
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('game-complete-modal').classList.add('active');
+        }
+
+        // Restart game
+        function restartGame() {
+            document.getElementById('game-complete-modal').classList.remove('active');
+            score = 0;
+            currentStreak = 0;
+            bestStreak = 0;
+            questionsAnswered = 0;
+            correctAnswers = 0;
+            answeredQuestionIds = []; // Reset answered questions for new game
+            initGame();
+        }
+
+        // Exit game
+        function exitGame() {
+            window.location.href = "{% url 'games_page' %}";
+        }
+
+        // Update game progress in backend
+        async function updateGameProgress() {
+            await fetch('/api/quizes/update-progress/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    level: currentLevel,
+                    score: score,
+                    questions_answered: questionsAnswered,
+                    correct_answers: correctAnswers,
+                    perfect_streak: bestStreak,
+                    time_spent: 300 - timer
+                })
+            });
+        }
+
+        // Utility functions
+        function playSound(audioElement) {
+            if (soundEnabled) {
+                audioElement.currentTime = 0;
+                audioElement.play().catch(e => console.log('Audio play failed:', e));
+            }
+        }
+
+        function speak(text) {
+            if (soundEnabled && 'speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8;
+                utterance.pitch = 1.2;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][Math.floor(Math.random() * 5)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('DOMContentLoaded', initGame);
+
+        // Load next question
+        async function loadNextQuestion() {
+            const res = await fetch("/api/get-next-question/");
+            const data = await res.json();
+
+            document.getElementById("question").innerText = data.question;
+
+            const optionsDiv = document.getElementById("options");
+            optionsDiv.innerHTML = "";
+
+            data.options.forEach(opt => {
+                const btn = document.createElement("button");
+                btn.innerText = opt;
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        // Initialize game
+        window.addEventListener("DOMContentLoaded", () => {
+            loadNextQuestion();
+        });
+
+    </script>
+</body>
+</html>

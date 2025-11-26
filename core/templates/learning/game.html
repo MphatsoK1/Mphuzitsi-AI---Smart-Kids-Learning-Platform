@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Learning Adventure - Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        /* Top Progress Bar */
+        .progress-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .progress-text {
+            flex: 1;
+            text-align: center;
+        }
+
+        /* App Header */
+        .app-header {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            margin-right: 12px;
+            color: #666;
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ff6b35;
+            margin: 0;
+        }
+
+        .timer {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ff6b35;
+            background: #fff8f6;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 2px solid #ff6b35;
+        }
+
+        .timer.warning {
+            color: #ff9800;
+            border-color: #ff9800;
+            background: #fff3e0;
+            animation: pulse 1s infinite;
+        }
+
+        .timer.danger {
+            color: #f44336;
+            border-color: #f44336;
+            background: #ffebee;
+            animation: pulse 0.5s infinite;
+        }
+
+        /* Main content with padding for header */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 120px 20px 100px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .welcome-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ff6b35;
+            margin-bottom: 12px;
+        }
+
+        .welcome-description {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .start-button {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .start-button:active {
+            transform: translateY(-1px);
+        }
+
+        /* Current Level Info */
+        .level-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            width: 100%;
+            display: none;
+        }
+
+        .level-info.show {
+            display: block;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        .level-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .level-description {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Section Header Card */
+        .section-header {
+            background: linear-gradient(135deg, #4fc3f7, #29b6f6);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .section-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .section-header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .section-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        /* Description */
+        .description {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #9c27b0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Game Board */
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .match-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .item-card {
+            background: #e3f2fd;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            flex: 1;
+            user-select: none;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .item-card:active {
+            cursor: grabbing;
+        }
+
+        .item-card:hover {
+            background: #bbdefb;
+            border-color: #2196f3;
+            transform: scale(1.02);
+        }
+
+        .item-card.dragging {
+            opacity: 0.7;
+            cursor: grabbing;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .item-card.selected {
+            background: #bbdefb;
+            border-color: #2196f3;
+            transform: scale(1.02);
+        }
+
+        .item-image {
+            max-width: 100%;
+            max-height: 70px;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .name-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid #e0e0e0;
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            user-select: none;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .name-card:hover {
+            border-color: #2196f3;
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .name-card.selected {
+            border-color: #2196f3;
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .name-card.drag-over {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .matched {
+            opacity: 0.7;
+            pointer-events: none;
+            background: #c8e6c9 !important;
+            border-color: #4caf50 !important;
+        }
+
+        .connection-line {
+            height: 2px;
+            background: #e0e0e0;
+            opacity: 0.5;
+            flex: 0 0 40px;
+        }
+
+        /* Phonics Section */
+        .phonics-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            display: none;
+        }
+
+        .phonics-section.active {
+            display: block;
+        }
+
+        .phonics-header {
+            text-align: center;
+            margin-bottom: 16px;
+            color: #ff6b35;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .phonics-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .phonics-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .phonics-letter {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff6b35;
+            width: 40px;
+            text-align: center;
+        }
+
+        .phonics-word {
+            flex: 1;
+            font-size: 16px;
+        }
+
+        .phonics-audio {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .phonics-audio:hover {
+            background: #e55a2b;
+            transform: scale(1.1);
+        }
+
+        /* Celebration Overlay */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .celebration.show {
+            display: flex;
+        }
+
+        .celebration-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 350px;
+            animation: popIn 0.5s ease-out;
+        }
+
+        .celebration h3 {
+            color: #4caf50;
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+
+        .celebration-stats {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .next-level-btn {
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .next-level-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 20px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            max-width: 120px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+            color: white;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .hint-btn {
+            background: #ff9800;
+            color: white;
+        }
+
+        .hint-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .next-btn {
+            background: #2196f3;
+            color: white;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            0% { transform: translateY(-20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .progress-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            background: #4caf50;
+            transform: scale(1.2);
+        }
+
+        .progress-dot.completed {
+            background: #8bc34a;
+        }
+    </style>
+</head>
+<body>
+    <!-- App Header -->
+    <header class="app-header">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <h1 class="header-title" id="header-title">Loading...</h1>
+        <div class="timer" id="timer">2:00</div>
+    </header>
+
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <div class="welcome-section" id="welcome-section">
+            <div class="welcome-icon" id="welcome-icon">🎮</div>
+            <h1 class="welcome-title" id="welcome-title">Ready to Play?</h1>
+            <p class="welcome-description" id="welcome-description">
+                Match the items with their names! You have 2 minutes to complete each level.
+            </p>
+            <button class="start-button" onclick="startRandomGame()">
+                🚀 Start Learning!
+            </button>
+            
+            <!-- Progress Indicator -->
+            <div class="progress-indicator" id="progress-indicator">
+                <!-- Progress dots will be dynamically generated -->
+            </div>
+        </div>
+
+        <!-- Current Level Info -->
+        <div class="level-info" id="level-info">
+            <div class="level-name" id="level-name">Level 1: Animal Adventure</div>
+            <div class="level-description" id="level-description">Match 4 animals to their names!</div>
+        </div>
+
+        <!-- Section Header -->
+        <div class="section-header" id="section-header" style="display: none;">
+            <div class="section-icon">🎯</div>
+            <h2 id="section-title">Current Challenge</h2>
+            <p id="section-description">Drag items to match with names!</p>
+        </div>
+
+        <!-- Description -->
+        <div class="description" id="description" style="display: none;">
+            Drag each item to its matching name!
+        </div>
+
+        <!-- Game Board -->
+        <div class="game-board" id="game-board" style="display: none;">
+            <!-- Rows will be dynamically generated -->
+        </div>
+
+        <!-- Phonics Section -->
+        <div class="phonics-section" id="phonics-section">
+            <div class="phonics-header">Learn Phonics</div>
+            <div class="phonics-content" id="phonics-content">
+                <!-- Phonics content will be dynamically generated -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" style="display: none;" id="bottom-nav">
+        <button class="btn submit-btn" id="submit-btn" onclick="submitAnswer()">Submit Answer</button>
+        <button class="btn hint-btn" id="hint-btn" onclick="showHint()">Hint</button>
+        <button class="btn next-btn" id="next-btn" onclick="nextLevel()" style="display: none;">Next Level</button>
+    </nav>
+
+    <!-- Celebration Overlay -->
+    <div class="celebration" id="celebration">
+        <div class="celebration-content">
+            <h3>🎉 Amazing Job!</h3>
+            <p id="celebration-message">You completed the level!</p>
+            <div class="celebration-stats">
+                <div class="stat-item">
+                    <span>Time Taken:</span>
+                    <span id="time-taken">0:00</span>
+                </div>
+                <div class="stat-item">
+                    <span>Score:</span>
+                    <span id="final-score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Perfect Matches:</span>
+                    <span id="perfect-matches">0/0</span>
+                </div>
+            </div>
+            <button class="next-level-btn" onclick="nextLevel()">
+                ➡️ Next Level
+            </button>
+            <button class="next-level-btn" onclick="replayLevel()" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2);">
+                🔄 Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentCategory = null;
+        let currentTaskSet = null;
+        let currentSessionId = null;
+        let draggedItem = null;
+        let matchedPairs = new Set();
+        let score = 0;
+        let currentItems = [];
+        let timerInterval = null;
+        let timeLeft = 120; // 2 minutes default
+        let startTime = null;
+        let userIdentifier = localStorage.getItem('user_identifier') || generateUserIdentifier();
+        let allTaskSets = [];
+        let completedTaskSets = new Set();
+        let currentLevelIndex = 0;
+
+        // Get category ID from URL
+        function getCategoryIdFromUrl() {
+            const path = window.location.pathname;
+            const match = path.match(/\/game\/(\d+)\//);
+            return match ? parseInt(match[1]) : null;
+        }
+
+        function generateUserIdentifier() {
+            const identifier = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('user_identifier', identifier);
+            return identifier;
+        }
+
+        // API functions
+        async function fetchCategory() {
+            const categoryId = getCategoryIdFromUrl();
+            if (!categoryId) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/categories/');
+                const data = await response.json();
+                const category = data.categories.find(c => c.id === categoryId);
+                return category;
+            } catch (error) {
+                console.error('Error fetching category:', error);
+                return null;
+            }
+        }
+
+        async function fetchTaskSets() {
+            const categoryId = getCategoryIdFromUrl();
+            try {
+                const response = await fetch(`/api/categories/${categoryId}/task-sets/`);
+                const data = await response.json();
+                return data.task_sets;
+            } catch (error) {
+                console.error('Error fetching task sets:', error);
+                return [];
+            }
+        }
+
+        async function fetchTaskSetItems(taskSetId) {
+            try {
+                const response = await fetch(`/api/task-sets/${taskSetId}/items/`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching task set items:', error);
+                return { items: [] };
+            }
+        }
+
+        async function startGameSession(taskSetId, timeLimit = 120) {
+            try {
+                const response = await fetch('/api/game/start/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        task_set_id: taskSetId,
+                        time_limit: timeLimit
+                    })
+                });
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error starting game session:', error);
+                return null;
+            }
+        }
+
+        async function updateGameProgress(score, completed = false, timeTaken = 0) {
+            if (!currentSessionId) return;
+            
+            try {
+                await fetch('/api/game/progress/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                        score: score,
+                        completed: completed,
+                        time_taken: timeTaken
+                    })
+                });
+            } catch (error) {
+                console.error('Error updating game progress:', error);
+            }
+        }
+
+        async function saveUserProgress(itemsCompleted, totalScore, levelCompleted = false) {
+            try {
+                await fetch('/api/progress/save/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_identifier: userIdentifier,
+                        category_id: currentCategory.id,
+                        items_completed: itemsCompleted,
+                        total_score: totalScore,
+                        level_completed: levelCompleted
+                    })
+                });
+            } catch (error) {
+                console.error('Error saving user progress:', error);
+            }
+        }
+
+        // Get a random task set that hasn't been completed recently
+        function getRandomTaskSet() {
+            const availableTaskSets = allTaskSets.filter(taskSet => !completedTaskSets.has(taskSet.id));
+            
+            if (availableTaskSets.length === 0) {
+                // If all task sets have been completed, reset the completed set
+                completedTaskSets.clear();
+                return allTaskSets[Math.floor(Math.random() * allTaskSets.length)];
+            }
+            
+            return availableTaskSets[Math.floor(Math.random() * availableTaskSets.length)];
+        }
+
+        // Initialize the game page
+        async function initGamePage() {
+            const category = await fetchCategory();
+            
+            if (!category) {
+                window.location.href = '/';
+                return;
+            }
+
+            currentCategory = category;
+            
+            // Update UI with category info
+            document.getElementById('header-title').textContent = category.name;
+            document.getElementById('welcome-title').textContent = `Welcome to ${category.name}!`;
+            document.getElementById('welcome-icon').textContent = category.icon;
+            document.getElementById('welcome-description').textContent = 
+                `Get ready to learn about ${category.name.toLowerCase()}! Match items with their names and have fun!`;
+
+            // Fetch all task sets
+            allTaskSets = await fetchTaskSets();
+            
+            if (allTaskSets.length === 0) {
+                document.getElementById('welcome-description').textContent = 
+                    'No levels available for this category yet. Please check back later!';
+                document.querySelector('.start-button').disabled = true;
+                return;
+            }
+
+            // Initialize progress indicator
+            initProgressIndicator();
+        }
+
+        function initProgressIndicator() {
+            const progressIndicator = document.getElementById('progress-indicator');
+            progressIndicator.innerHTML = '';
+            
+            // Show up to 5 dots to indicate multiple levels
+            const maxDots = Math.min(5, allTaskSets.length);
+            for (let i = 0; i < maxDots; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                if (i === 0) dot.classList.add('active');
+                progressIndicator.appendChild(dot);
+            }
+        }
+
+        function updateProgressIndicator() {
+            const dots = document.querySelectorAll('.progress-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active', 'completed');
+                if (index < currentLevelIndex) {
+                    dot.classList.add('completed');
+                } else if (index === currentLevelIndex) {
+                    dot.classList.add('active');
+                }
+            });
+        }
+
+        // Start a random game
+        async function startRandomGame() {
+            // Hide welcome section, show game UI
+            document.getElementById('welcome-section').style.display = 'none';
+            document.getElementById('section-header').style.display = 'block';
+            document.getElementById('description').style.display = 'block';
+            document.getElementById('bottom-nav').style.display = 'flex';
+
+            // Get a random task set
+            currentTaskSet = getRandomTaskSet();
+            currentLevelIndex = 0;
+            updateProgressIndicator();
+
+            // Show level info
+            document.getElementById('level-name').textContent = currentTaskSet.name;
+            document.getElementById('level-description').textContent = 
+                `Match ${currentTaskSet.items_per_set} items to their names!`;
+            document.getElementById('level-info').classList.add('show');
+
+            // Start game session
+            const sessionData = await startGameSession(currentTaskSet.id);
+            if (sessionData) {
+                currentSessionId = sessionData.session_id;
+                timeLeft = sessionData.time_limit;
+                startTimer();
+            }
+
+            // Initialize the actual game
+            if (currentCategory.type !== 'phonics') {
+                await initGame(currentTaskSet);
+            } else {
+                await initPhonics(currentTaskSet);
+            }
+        }
+
+        // Timer functions
+        function startTimer() {
+            startTime = Date.now();
+            clearInterval(timerInterval);
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const timerElement = document.getElementById('timer');
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Update timer color based on time left
+            timerElement.className = 'timer';
+            if (timeLeft <= 30) {
+                timerElement.classList.add('warning');
+            }
+            if (timeLeft <= 10) {
+                timerElement.classList.add('danger');
+            }
+        }
+
+        function timeUp() {
+            document.getElementById('celebration-message').textContent = 'Time\'s up! Try again!';
+            document.getElementById('time-taken').textContent = '2:00';
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('perfect-matches').textContent = `${score}/${currentItems.length}`;
+            document.getElementById('celebration').classList.add('show');
+            
+            const timeTaken = 120; // 2 minutes when time's up
+            updateGameProgress(score, false, timeTaken);
+            saveUserProgress(Array.from(matchedPairs), score * 5, false);
+        }
+
+        function getTimeTaken() {
+            if (!startTime) return 0;
+            return Math.floor((Date.now() - startTime) / 1000);
+        }
+
+        // Initialize phonics section
+        async function initPhonics(taskSet) {
+            const phonicsContent = document.getElementById('phonics-content');
+            phonicsContent.innerHTML = '<div class="loading">Loading phonics...</div>';
+            
+            const data = await fetchTaskSetItems(taskSet.id);
+            currentItems = data.items;
+            
+            phonicsContent.innerHTML = '';
+            
+            currentItems.forEach(item => {
+                const phonicsItem = document.createElement('div');
+                phonicsItem.className = 'phonics-item';
+                
+                const letterDiv = document.createElement('div');
+                letterDiv.className = 'phonics-letter';
+                letterDiv.textContent = item.letter;
+                
+                const wordsDiv = document.createElement('div');
+                wordsDiv.className = 'phonics-word';
+                wordsDiv.textContent = item.words.join(', ');
+                
+                const audioBtn = document.createElement('button');
+                audioBtn.className = 'phonics-audio';
+                audioBtn.innerHTML = '🔊';
+                audioBtn.addEventListener('click', function() {
+                    if (item.audio) {
+                        const audio = new Audio(item.audio);
+                        audio.play().catch(e => console.log('Audio play failed:', e));
+                    } else {
+                        // Fallback: Use speech synthesis
+                        const utterance = new SpeechSynthesisUtterance(item.words[0]);
+                        utterance.rate = 0.8;
+                        speechSynthesis.speak(utterance);
+                    }
+                });
+                
+                phonicsItem.appendChild(letterDiv);
+                phonicsItem.appendChild(wordsDiv);
+                phonicsItem.appendChild(audioBtn);
+                
+                phonicsContent.appendChild(phonicsItem);
+            });
+            
+            document.getElementById('game-board').style.display = 'none';
+            document.getElementById('phonics-section').classList.add('active');
+        }
+
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        async function initGame(taskSet) {
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = '<div class="loading">Loading game...</div>';
+            gameBoard.style.display = 'flex';
+            document.getElementById('phonics-section').classList.remove('active');
+            
+            const data = await fetchTaskSetItems(taskSet.id);
+            currentItems = data.items;
+            
+            if (currentItems.length === 0) {
+                gameBoard.innerHTML = '<div class="loading">No items available for this level</div>';
+                return;
+            }
+            
+            gameBoard.innerHTML = '';
+            const shuffledNames = shuffle(currentItems);
+
+            currentItems.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'match-row';
+
+                // Item card (fixed order) - draggable
+                const itemCard = document.createElement('div');
+                itemCard.className = 'item-card';
+                itemCard.dataset.id = item.id;
+                itemCard.dataset.name = item.name;
+                itemCard.draggable = true;
+                
+                // Create content based on category type
+                if (currentCategory.type === 'colors') {
+                    itemCard.style.backgroundColor = item.color;
+                    if (item.display_text) {
+                        const text = document.createElement('div');
+                        text.textContent = item.display_text;
+                        text.style.fontSize = '24px';
+                        text.style.fontWeight = 'bold';
+                        itemCard.appendChild(text);
+                    }
+                } else if (item.image) {
+                    const img = document.createElement('img');
+                    img.src = item.image;
+                    img.alt = item.name;
+                    img.className = 'item-image';
+                    itemCard.appendChild(img);
+                } else {
+                    itemCard.textContent = item.display_text || item.name;
+                    itemCard.style.fontSize = '24px';
+                    itemCard.style.fontWeight = 'bold';
+                }
+                
+                // Drag events
+                itemCard.addEventListener('dragstart', handleDragStart);
+                itemCard.addEventListener('dragend', handleDragEnd);
+                
+                row.appendChild(itemCard);
+
+                // Connection line
+                const line = document.createElement('div');
+                line.className = 'connection-line';
+                row.appendChild(line);
+
+                // Name card (shuffled) - drop target
+                const nameItem = shuffledNames[index];
+                const nameCard = document.createElement('div');
+                nameCard.className = 'name-card';
+                nameCard.textContent = nameItem.name;
+                nameCard.dataset.id = nameItem.id;
+                nameCard.dataset.name = nameItem.name;
+                
+                // Drop events
+                nameCard.addEventListener('dragover', handleDragOver);
+                nameCard.addEventListener('dragleave', handleDragLeave);
+                nameCard.addEventListener('drop', handleDrop);
+                
+                row.appendChild(nameCard);
+
+                gameBoard.appendChild(row);
+            });
+            
+            // Reset game state
+            score = 0;
+            matchedPairs.clear();
+        }
+
+        function handleDragStart(e) {
+            if (matchedPairs.has(e.target.dataset.id)) {
+                e.preventDefault();
+                return;
+            }
+            draggedItem = {
+                id: e.target.dataset.id,
+                name: e.target.dataset.name
+            };
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            if (matchedPairs.has(e.target.dataset.id)) return;
+            e.preventDefault();
+            e.target.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.target.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            
+            if (matchedPairs.has(e.target.dataset.id)) return;
+            
+            const droppedOnId = e.target.dataset.id;
+            const droppedOnName = e.target.dataset.name;
+            
+            // Check if match is correct
+            if (draggedItem.id === droppedOnId) {
+                const itemCard = document.querySelector(`.item-card[data-id="${draggedItem.id}"]`);
+                const nameCard = e.target;
+                
+                itemCard.classList.add('matched');
+                nameCard.classList.add('matched');
+                
+                matchedPairs.add(draggedItem.id);
+                score++;
+                
+                // Update progress
+                updateGameProgress(score);
+                
+                if (score === currentItems.length) {
+                    clearInterval(timerInterval);
+                    const timeTaken = getTimeTaken();
+                    setTimeout(() => {
+                        document.getElementById('celebration').classList.add('show');
+                        document.getElementById('celebration-message').textContent = 
+                            `Perfect! You matched all ${currentItems.length} items!`;
+                        document.getElementById('time-taken').textContent = formatTime(timeTaken);
+                        document.getElementById('final-score').textContent = score * 10;
+                        document.getElementById('perfect-matches').textContent = `${score}/${currentItems.length}`;
+                        
+                        // Mark this task set as completed
+                        completedTaskSets.add(currentTaskSet.id);
+                        currentLevelIndex++;
+                        updateProgressIndicator();
+                        
+                        updateGameProgress(score, true, timeTaken);
+                        saveUserProgress(Array.from(matchedPairs), score * 10, true);
+                    }, 500);
+                }
+            } else {
+                // Wrong match feedback
+                const itemCard = document.querySelector(`.item-card[data-id="${draggedItem.id}"]`);
+                itemCard.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    itemCard.style.animation = '';
+                }, 500);
+            }
+            
+            draggedItem = null;
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function submitAnswer() {
+            if (!currentTaskSet) {
+                alert("Please start a game first!");
+                return;
+            }
+            
+            if (currentCategory.type === 'phonics') {
+                alert("Great job learning phonics! Keep practicing!");
+                return;
+            }
+            
+            // Check if all matches are complete
+            if (score === currentItems.length) {
+                clearInterval(timerInterval);
+                const timeTaken = getTimeTaken();
+                document.getElementById('celebration').classList.add('show');
+                document.getElementById('celebration-message').textContent = 
+                    `Perfect! You matched all ${currentItems.length} items!`;
+                document.getElementById('time-taken').textContent = formatTime(timeTaken);
+                document.getElementById('final-score').textContent = score * 10;
+                document.getElementById('perfect-matches').textContent = `${score}/${currentItems.length}`;
+                
+                // Mark this task set as completed
+                completedTaskSets.add(currentTaskSet.id);
+                currentLevelIndex++;
+                updateProgressIndicator();
+                
+                updateGameProgress(score, true, timeTaken);
+                saveUserProgress(Array.from(matchedPairs), score * 10, true);
+            } else {
+                alert(`Keep going! ${score} out of ${currentItems.length} matched.`);
+            }
+        }
+
+        function showHint() {
+            if (!currentTaskSet) {
+                alert("Please start a game first!");
+                return;
+            }
+            
+            if (currentCategory.type === 'phonics') {
+                alert("Click the audio buttons to hear the letter sounds!");
+                return;
+            }
+            
+            // Simple hint: Highlight a correct pair briefly
+            const unmatched = currentItems.filter(item => !matchedPairs.has(item.id.toString()));
+            if (unmatched.length > 0) {
+                const hintItem = document.querySelector(`.item-card[data-id="${unmatched[0].id}"]`);
+                const hintName = document.querySelector(`.name-card[data-id="${unmatched[0].id}"]`);
+                if (hintItem && hintName) {
+                    hintItem.classList.add('selected');
+                    hintName.classList.add('selected');
+                    setTimeout(() => {
+                        hintItem.classList.remove('selected');
+                        hintName.classList.remove('selected');
+                    }, 2000);
+                }
+            } else {
+                alert('All matched! Great job!');
+            }
+        }
+
+        function nextLevel() {
+            document.getElementById('celebration').classList.remove('show');
+            
+            // Get a new random task set
+            currentTaskSet = getRandomTaskSet();
+            
+            // Update level info
+            document.getElementById('level-name').textContent = currentTaskSet.name;
+            document.getElementById('level-description').textContent = 
+                `Match ${currentTaskSet.items_per_set} items to their names!`;
+            
+            // Reset timer and start new game
+            clearInterval(timerInterval);
+            timeLeft = 120;
+            updateTimerDisplay();
+            startTimer();
+            
+            // Start new game session
+            startGameSession(currentTaskSet.id).then(sessionData => {
+                if (sessionData) {
+                    currentSessionId = sessionData.session_id;
+                }
+            });
+            
+            // Initialize the actual game
+            if (currentCategory.type !== 'phonics') {
+                initGame(currentTaskSet);
+            } else {
+                initPhonics(currentTaskSet);
+            }
+        }
+
+        function replayLevel() {
+            document.getElementById('celebration').classList.remove('show');
+            
+            // Reset timer and restart the same level
+            clearInterval(timerInterval);
+            timeLeft = 120;
+            updateTimerDisplay();
+            startTimer();
+            
+            // Start new game session for the same task set
+            startGameSession(currentTaskSet.id).then(sessionData => {
+                if (sessionData) {
+                    currentSessionId = sessionData.session_id;
+                }
+            });
+            
+            // Re-initialize the game
+            if (currentCategory.type !== 'phonics') {
+                initGame(currentTaskSet);
+            } else {
+                initPhonics(currentTaskSet);
+            }
+        }
+
+        function goBack() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            window.location.href = '/';
+        }
+
+        // Initialize the app when page loads
+        document.addEventListener('DOMContentLoaded', initGamePage);
+    </script>
+</body>
+</html>

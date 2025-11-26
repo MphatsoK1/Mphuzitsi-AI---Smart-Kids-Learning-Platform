@@ -1,0 +1,963 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Riddles Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Poppins', sans-serif;
+        }
+        .answer-input {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            width: 100%;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+        .answer-input:focus {
+            border-color: #8b5cf6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(139, 92, 246, 0.2);
+            outline: none;
+        }
+        .answer-input.correct {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        .answer-input.incorrect {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+        .feedback-correct {
+            color: #10b981;
+            font-weight: bold;
+            animation: bounce 0.5s ease;
+        }
+        .feedback-wrong {
+            color: #ef4444;
+            font-weight: bold;
+            animation: shake 0.5s ease;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 9999;
+            animation: confetti-fall 2s linear forwards;
+        }
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.7);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .difficulty-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .difficulty-easy { background: #d1fae5; color: #065f46; }
+        .difficulty-medium { background: #fef3c7; color: #92400e; }
+        .difficulty-hard { background: #fee2e2; color: #991b1b; }
+        .difficulty-expert { background: #e0e7ff; color: #3730a3; }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            transition: width 0.3s ease;
+        }
+        
+        .riddle-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.5;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .hint-button {
+            background: #f3f4f6;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            padding: 8px 16px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .hint-button:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+        }
+        .hint-button.used {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+
+        .option-button {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+        .option-button:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+        }
+        .option-button .option-letter {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #e5e7eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #6b7280;
+        }
+        .option-button.selected {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .option-button.selected .option-letter,
+        .option-button.correct .option-letter,
+        .option-button.incorrect .option-letter {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+        .option-button.correct {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        .option-button.incorrect {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div style="display:none;">
+        {% csrf_token %}
+    </div>
+    <div class="max-w-2xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center mb-4 sm:mb-6">
+            <a href="{% url 'games_page' %}" class="text-gray-600 hover:text-gray-800 mr-3 sm:mr-4">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">Riddles Game</h1>
+            <div class="ml-auto text-sm text-gray-600">
+                Level <span id="current-level">1</span>
+            </div>
+        </div>
+
+        <!-- Game Info Card -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4">
+            <!-- Title Row -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center text-blue-500">
+                    <span class="text-2xl sm:text-3xl mr-2" id="category-icon">🧩</span>
+                    <span class="font-semibold text-base sm:text-lg" id="category-name">Brain Teasers</span>
+                </div>
+                <div class="text-sm sm:text-base text-gray-600 font-medium">
+                    <span id="riddles-solved">0</span>/<span id="riddles-required">5</span>
+                </div>
+            </div>
+
+            <!-- AI Buddy Header -->
+            <div class="bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl p-4 flex items-center justify-between text-white shadow-md">
+                <div class="flex items-center flex-1">
+                    <span class="text-3xl sm:text-4xl mr-3">🔍</span>
+                    <div>
+                        <div class="font-bold text-base sm:text-lg">Riddle Master!</div>
+                        <div class="text-xs sm:text-sm opacity-90">Can you solve them all?</div>
+                    </div>
+                </div>
+                <div class="text-right ml-4">
+                    <div class="text-xs sm:text-sm opacity-90">Score:</div>
+                    <div class="font-bold text-2xl sm:text-3xl" id="score">0</div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-4">
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Riddle Progress</span>
+                    <span id="progress-text">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="level-progress" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer & Difficulty -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 mb-4 flex items-center justify-between">
+            <div class="flex items-center text-orange-500">
+                <i class='bx bx-time text-xl mr-2'></i>
+                <span class="font-semibold" id="timer">05:00</span>
+            </div>
+            <div class="difficulty-badge" id="difficulty-badge">Easy</div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4 flex-1">
+            <div id="riddle-section">
+                <p class="text-center text-gray-600 text-sm font-medium mb-4">
+                    Solve the riddle by choosing the best answer
+                </p>
+                
+                <div class="riddle-text mb-6" id="riddle-text">
+                    Loading riddle...
+                </div>
+                
+                <!-- Answer Options -->
+                <div class="mb-4">
+                    <div id="options-container" class="space-y-3">
+                        <!-- Options rendered dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Hint Button -->
+                <div class="text-center mb-4">
+                    <button id="hint-button" class="hint-button" onclick="showHint()">
+                        <i class='bx bx-bulb'></i> Need a hint?
+                    </button>
+                </div>
+                
+                <!-- Explanation -->
+                <div id="explanation" class="hidden mt-4 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-800 font-semibold">Explanation:</p>
+                    <p id="explanation-text" class="text-sm text-blue-700 mt-1"></p>
+                </div>
+                
+                <!-- Hint Display -->
+                <div id="hint-display" class="hidden mt-4 p-4 bg-yellow-50 rounded-lg">
+                    <p class="text-sm text-yellow-800 font-semibold">Hint:</p>
+                    <p id="hint-text" class="text-sm text-yellow-700 mt-1"></p>
+                    <button id="hint-audio-btn" class="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white text-yellow-700 border border-yellow-300 text-sm font-semibold shadow-sm hover:shadow transition hidden" onclick="playHintAudio()">
+                        <i class='bx bx-volume-full'></i> Hear Hint
+                    </button>
+                </div>
+                
+                <p class="text-base mt-4 text-center min-h-6" id="feedback"></p>
+            </div>
+        </div>
+
+        <!-- Buddy's Tip -->
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-4 flex items-start shadow-sm border border-blue-100">
+            <span class="text-3xl sm:text-4xl mr-3 flex-shrink-0">🔍</span>
+            <div>
+                <div class="font-bold text-gray-800 mb-1 text-sm sm:text-base">Riddle Tip:</div>
+                <div class="text-xs sm:text-sm text-gray-600" id="tip">Think outside the box! Riddles often have clever wordplay.</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex gap-3">
+            <button onclick="skipRiddle()" class="flex-1 bg-gray-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                <i class='bx bx-skip-next'></i> Skip
+            </button>
+            <button onclick="submitAnswer()" class="flex-1 bg-gradient-to-r from-green-400 to-green-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition">
+                <i class='bx bx-check-circle'></i> Submit
+            </button>
+            <button onclick="nextRiddle()" id="next-btn" class="flex-1 bg-gradient-to-r from-blue-400 to-blue-500 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition hidden">
+                <i class='bx bx-arrow-right'></i> Next
+            </button>
+        </div>
+    </div>
+
+    <!-- Level Complete Modal -->
+    <div id="level-complete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4">🎉</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2" id="modal-title">Level Complete!</h2>
+            <p class="text-gray-600 mb-4" id="modal-message">Great job solving those riddles!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-blue-500" id="modal-score">0</div>
+                    <div class="text-sm text-gray-600">Score</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-green-500" id="modal-correct">0</div>
+                    <div class="text-sm text-gray-600">Solved</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-blue-500" id="modal-accuracy">0%</div>
+                    <div class="text-sm text-gray-600">Accuracy</div>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="text-2xl font-bold text-orange-500" id="modal-streak">0</div>
+                    <div class="text-sm text-gray-600">Best Streak</div>
+                </div>
+            </div>
+            
+            <button onclick="nextLevel()" class="w-full bg-gradient-to-r from-blue-400 to-purple-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                Continue to Next Level
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Complete Modal -->
+    <div id="game-complete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4">🏆</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Game Complete!</h2>
+            <p class="text-gray-600 mb-4">Amazing! You've solved all the riddles!</p>
+            
+            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-4 mb-6 text-white">
+                <div class="text-3xl font-bold" id="final-score">0</div>
+                <div class="text-sm">Final Score</div>
+            </div>
+            
+            <button onclick="restartGame()" class="w-full bg-gradient-to-r from-green-400 to-green-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition mb-3">
+                Play Again
+            </button>
+            <button onclick="exitGame()" class="w-full bg-gray-500 text-white py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition">
+                Exit Game
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="correct-sound" src="{% static 'sounds/yay.mp3' %}"></audio>
+    <audio id="wrong-sound" src="{% static 'sounds/sounds.mp3' %}"></audio>
+    <audio id="level-complete-sound" src="{% static 'sounds/yay.mp3' %}"></audio>
+
+    <script>
+        // Game state
+        let currentLevel = 1;
+        let currentRiddleIndex = 0;
+        let riddles = [];
+        let score = 0;
+        let riddlesSolved = 0;
+        let correctAnswers = 0;
+        let currentStreak = 0;
+        let bestStreak = 0;
+        let timer = 300;
+        let timerInterval = null;
+        let currentTimeLimit = 300;
+        let gameActive = false;
+        let sessionId = null;
+        let soundEnabled = true;
+        let hintUsed = false;
+        let answeredRiddleIds = [];
+        let selectedOption = null;
+        let optionsLocked = false;
+        let currentHintText = '';
+
+        // DOM elements
+        const elements = {
+            score: document.getElementById('score'),
+            timer: document.getElementById('timer'),
+            riddleText: document.getElementById('riddle-text'),
+            feedback: document.getElementById('feedback'),
+            explanation: document.getElementById('explanation'),
+            explanationText: document.getElementById('explanation-text'),
+            hintDisplay: document.getElementById('hint-display'),
+            hintText: document.getElementById('hint-text'),
+            hintAudioBtn: document.getElementById('hint-audio-btn'),
+            hintButton: document.getElementById('hint-button'),
+            optionsContainer: document.getElementById('options-container'),
+            currentLevel: document.getElementById('current-level'),
+            riddlesSolved: document.getElementById('riddles-solved'),
+            riddlesRequired: document.getElementById('riddles-required'),
+            levelProgress: document.getElementById('level-progress'),
+            progressText: document.getElementById('progress-text'),
+            difficultyBadge: document.getElementById('difficulty-badge'),
+            categoryName: document.getElementById('category-name'),
+            categoryIcon: document.getElementById('category-icon'),
+            tip: document.getElementById('tip'),
+            nextBtn: document.getElementById('next-btn')
+        };
+
+        // Audio elements
+        const correctSound = document.getElementById('correct-sound');
+        const wrongSound = document.getElementById('wrong-sound');
+        const levelCompleteSound = document.getElementById('level-complete-sound');
+
+        // Generate session ID
+        function generateSessionId() {
+            return 'riddles_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Initialize game
+        async function initGame() {
+            sessionId = generateSessionId();
+            
+            try {
+                await fetchJson('/api/riddles/start/', {
+                    method: 'POST',
+                    headers: getJsonHeaders(),
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        player_name: '{{ request.user.username|default:"Player" }}'
+                    })
+                });
+                
+                loadLevel(1);
+            } catch (error) {
+                handleFetchError('game session', error);
+            }
+        }
+
+        // Load level - UPDATED API ENDPOINT
+        async function loadLevel(level) {
+            try {
+                const answeredIdsParam = answeredRiddleIds.length > 0 
+                    ? '&answered_ids=' + answeredRiddleIds.join(',') 
+                    : '';
+                
+                const data = await fetchJson(`/api/riddles/level/?level=${level}${answeredIdsParam}`);
+                
+                currentLevel = data.level_number;
+                riddles = data.questions || [];
+                currentRiddleIndex = 0;
+                riddlesSolved = 0;
+                correctAnswers = 0;
+                currentStreak = 0;
+                currentTimeLimit = data.time_limit;
+                timer = currentTimeLimit;
+                
+                elements.currentLevel.textContent = currentLevel;
+                elements.riddlesRequired.textContent = data.riddles_required;
+                elements.difficultyBadge.textContent = data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
+                elements.difficultyBadge.className = `difficulty-badge difficulty-${data.difficulty}`;
+                elements.categoryName.textContent = data.category;
+                elements.categoryIcon.textContent = data.icon;
+                
+                updateProgress();
+                loadRiddle();
+                startTimer();
+                gameActive = true;
+                
+            } catch (error) {
+                handleFetchError('level data', error);
+            }
+        }
+
+        // Load current riddle
+        function loadRiddle() {
+            if (currentRiddleIndex >= riddles.length) {
+                levelComplete();
+                return;
+            }
+            
+            const riddle = riddles[currentRiddleIndex];
+            hintUsed = false;
+            
+            // Clear previous riddle state
+            elements.riddleText.textContent = riddle.question_text;
+            elements.feedback.textContent = '';
+            elements.explanation.classList.add('hidden');
+            elements.hintDisplay.classList.add('hidden');
+            elements.hintAudioBtn.classList.add('hidden');
+            elements.hintButton.classList.remove('used');
+            elements.hintButton.innerHTML = '<i class="bx bx-bulb"></i> Need a hint?';
+            elements.hintButton.disabled = false;
+            elements.nextBtn.classList.add('hidden');
+            selectedOption = null;
+            optionsLocked = false;
+            currentHintText = '';
+            renderOptions(riddle);
+            elements.tip.textContent = riddle.tip || getFallbackTip();
+            
+            // Add AI indicator if it's an AI-generated riddle
+            if (riddle.is_ai) {
+                elements.riddleText.innerHTML = riddle.question_text + ' <span class="text-xs text-blue-500">(AI Generated)</span>';
+            }
+            
+            updateProgress();
+            
+            // Scroll to top of section on mobile
+            elements.riddleText.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Submit answer
+        function submitAnswer() {
+            if (!gameActive) return;
+            
+            if (!selectedOption) {
+                showFeedback('Please choose an option!', 'info');
+                return;
+            }
+            const userAnswer = selectedOption.trim().toLowerCase();
+            
+            riddlesSolved++;
+            const riddle = riddles[currentRiddleIndex];
+            const correctAnswer = riddle.answer.toLowerCase();
+            const isCorrect = userAnswer === correctAnswer;
+            
+            // Track this riddle as answered to avoid repetition
+            const numericId = typeof riddle.id === 'number' ? riddle.id : parseInt(riddle.id, 10);
+            if (!Number.isNaN(numericId) && !answeredRiddleIds.includes(numericId)) {
+                answeredRiddleIds.push(numericId);
+            }
+            
+            // Disable options after submission
+            elements.hintButton.disabled = true;
+            
+            if (isCorrect) {
+                correctAnswers++;
+                currentStreak++;
+                bestStreak = Math.max(bestStreak, currentStreak);
+                
+                // Calculate score (base + streak bonus - hint penalty)
+                let points = 10;
+                if (currentStreak >= 3) points += 5;
+                if (currentStreak >= 5) points += 10;
+                if (hintUsed) points = Math.max(5, points - 3); // Penalty for using hint
+                
+                score += points;
+                
+                showFeedback('✓ Correct! Well done!', 'correct');
+                playSound(correctSound);
+                createConfetti();
+                
+            } else {
+                currentStreak = 0;
+                showFeedback(`✗ Wrong! The answer was: ${riddle.answer}`, 'wrong');
+                playSound(wrongSound);
+            }
+            
+            // Show explanation if available
+            if (riddle.explanation) {
+                elements.explanationText.textContent = riddle.explanation;
+                elements.explanation.classList.remove('hidden');
+            }
+            
+            elements.nextBtn.classList.remove('hidden');
+            lockOptionStyles(riddle.answer);
+            updateProgress();
+        }
+
+        // Show hint
+        function showHint() {
+            if (!gameActive || hintUsed) return;
+            
+            const riddle = riddles[currentRiddleIndex];
+            hintUsed = true;
+            
+            const hint = riddle.hint || buildHintFallback(riddle.answer);
+            currentHintText = hint;
+            elements.hintText.textContent = hint;
+            elements.hintDisplay.classList.remove('hidden');
+            elements.hintAudioBtn.classList.remove('hidden');
+            elements.hintButton.classList.add('used');
+            elements.hintButton.innerHTML = '<i class="bx bx-bulb"></i> Hint used';
+            
+            // Small score penalty for using hint
+            showFeedback('Hint used! -3 points', 'info');
+        }
+
+        function buildHintFallback(answer) {
+            if (!answer) return 'Look closely at each clue in the riddle.';
+            if (answer.length <= 4) {
+                return `The answer begins with "${answer[0].toUpperCase()}".`;
+            }
+            return `Think of something that starts with "${answer[0].toUpperCase()}" and ends with "${answer.slice(-1).toUpperCase()}".`;
+        }
+
+        function playHintAudio() {
+            if (!currentHintText) return;
+            if (!soundEnabled) {
+                showFeedback('Enable sound to hear the hint.', 'info');
+                return;
+            }
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(currentHintText);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                speechSynthesis.cancel();
+                speechSynthesis.speak(utterance);
+            } else {
+                showFeedback('Speech not supported on this device.', 'info');
+            }
+        }
+
+        // Skip riddle
+        function skipRiddle() {
+            if (!gameActive) return;
+            
+            currentStreak = 0;
+            showFeedback('Riddle skipped', 'info');
+            
+            currentRiddleIndex++;
+            loadRiddle();
+        }
+
+        // Next riddle
+        function nextRiddle() {
+            elements.feedback.textContent = '';
+            elements.explanation.classList.add('hidden');
+            elements.hintDisplay.classList.add('hidden');
+            elements.nextBtn.classList.add('hidden');
+            
+            currentRiddleIndex++;
+            loadRiddle();
+        }
+
+        // Show feedback
+        function showFeedback(message, type) {
+            elements.feedback.textContent = message;
+            elements.feedback.className = type === 'correct' ? 'feedback-correct' : 
+                                       type === 'wrong' ? 'feedback-wrong' : 
+                                       'text-blue-500';
+        }
+
+        // Update progress
+        function updateProgress() {
+            elements.score.textContent = score;
+            elements.riddlesSolved.textContent = riddlesSolved;
+            
+            const required = parseInt(elements.riddlesRequired.textContent, 10) || 1;
+            const progress = (riddlesSolved / required) * 100;
+            elements.levelProgress.style.width = `${progress}%`;
+            elements.progressText.textContent = `${Math.round(progress)}%`;
+        }
+
+        function getFallbackTip() {
+            const tips = [
+                "Think about wordplay and double meanings!",
+                "Sometimes the answer is simpler than you think!",
+                "Read the riddle carefully - every word matters!",
+                "Think about common objects and their characteristics!",
+                "Don't overthink it - go with your first instinct!"
+            ];
+            return tips[Math.floor(Math.random() * tips.length)];
+        }
+
+        // Render multiple-choice options
+        function renderOptions(riddle) {
+            const options = (riddle.options && riddle.options.length ? riddle.options : [riddle.answer]);
+            elements.optionsContainer.innerHTML = '';
+            elements.optionsContainer.className = 'space-y-3';
+            selectedOption = null;
+            optionsLocked = false;
+
+            const letters = ['A', 'B', 'C', 'D', 'E'];
+            options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'option-button';
+                button.setAttribute('data-value', option);
+                button.innerHTML = `
+                    <span class="option-letter">${letters[index] || '?'}</span>
+                    <span>${option}</span>
+                `;
+                button.addEventListener('click', () => selectOption(option, button));
+                elements.optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectOption(optionValue, button) {
+            if (optionsLocked) return;
+            selectedOption = optionValue;
+            const buttons = elements.optionsContainer.querySelectorAll('.option-button');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+        }
+
+        function lockOptionStyles(correctAnswer) {
+            optionsLocked = true;
+            const buttons = elements.optionsContainer.querySelectorAll('.option-button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                const value = btn.getAttribute('data-value') || '';
+                const isCorrect = value.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+                if (isCorrect) {
+                    btn.classList.add('correct');
+                }
+                const isSelected = selectedOption && value.trim().toLowerCase() === selectedOption.trim().toLowerCase();
+                if (isSelected && !isCorrect) {
+                    btn.classList.add('incorrect');
+                }
+                btn.classList.remove('selected');
+            });
+        }
+
+        // Timer
+        function startTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            timerInterval = setInterval(() => {
+                if (timer > 0 && gameActive) {
+                    timer--;
+                    const minutes = Math.floor(timer / 60);
+                    const seconds = timer % 60;
+                    elements.timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else if (timer <= 0 && gameActive) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function timeUp() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            gameActive = false;
+            showFeedback('⏰ Time\'s up! Level completed.', 'wrong');
+            setTimeout(levelComplete, 2000);
+        }
+
+        // Level complete
+        function levelComplete() {
+            gameActive = false;
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            playSound(levelCompleteSound);
+            
+            // Update progress in backend - UPDATED API ENDPOINT
+            updateGameProgress();
+            
+            const accuracy = riddlesSolved > 0 ? Math.round((correctAnswers / riddlesSolved) * 100) : 0;
+            
+            document.getElementById('modal-score').textContent = score;
+            document.getElementById('modal-correct').textContent = `${correctAnswers}/${riddlesSolved}`;
+            document.getElementById('modal-accuracy').textContent = accuracy + '%';
+            document.getElementById('modal-streak').textContent = bestStreak;
+            
+            document.getElementById('level-complete-modal').classList.add('active');
+        }
+
+        // Next level - UPDATED API ENDPOINT
+        async function nextLevel() {
+            document.getElementById('level-complete-modal').classList.remove('active');
+            
+            try {
+                await fetchJson(`/api/riddles/next-level/?current_level=${currentLevel}`);
+                loadLevel(currentLevel + 1);
+            } catch (error) {
+                if (error.message && error.message.toLowerCase().includes('no more levels')) {
+                    showGameComplete();
+                } else {
+                    handleFetchError('next level', error);
+                }
+            }
+        }
+
+        // Show game complete
+        function showGameComplete() {
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('game-complete-modal').classList.add('active');
+        }
+
+        // Restart game
+        function restartGame() {
+            document.getElementById('game-complete-modal').classList.remove('active');
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            score = 0;
+            currentStreak = 0;
+            bestStreak = 0;
+            riddlesSolved = 0;
+            correctAnswers = 0;
+            answeredRiddleIds = [];
+            initGame();
+        }
+
+        // Exit game
+        function exitGame() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            window.location.href = "{% url 'games_page' %}";
+        }
+
+        // Update game progress in backend - UPDATED API ENDPOINT
+        async function updateGameProgress() {
+            try {
+                await fetchJson('/api/riddles/update/', {
+                    method: 'POST',
+                    headers: getJsonHeaders(),
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        level: currentLevel,
+                        score: score,
+                        questions_answered: riddlesSolved,
+                        correct_answers: correctAnswers,
+                        perfect_streak: bestStreak,
+                        time_spent: Math.max(currentTimeLimit - timer, 0)
+                    })
+                });
+            } catch (error) {
+                console.warn('Failed to sync progress:', error);
+            }
+        }
+
+        async function fetchJson(url, options = {}) {
+            const response = await fetch(url, options);
+            const text = await response.text();
+            let data = {};
+            
+            if (text) {
+                try {
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    throw new Error('Received invalid data from the server.');
+                }
+            }
+            
+            if (!response.ok || data.status === 'error' || (typeof data.error === 'string' && data.error.length)) {
+                const message = data.error || data.message || `Request failed (${response.status})`;
+                throw new Error(message);
+            }
+            
+            return data;
+        }
+
+        function handleFetchError(context, error) {
+            console.error(`Error while loading ${context}:`, error);
+            elements.riddleText.textContent = `Unable to load ${context}. Please try again.`;
+            showFeedback(`Unable to load ${context}: ${error.message}`, 'wrong');
+            gameActive = false;
+        }
+
+        function getJsonHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            const csrfToken = getCSRFToken();
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+            return headers;
+        }
+
+        // Utility functions
+        function playSound(audioElement) {
+            if (soundEnabled) {
+                audioElement.currentTime = 0;
+                audioElement.play().catch(e => console.log('Audio play failed:', e));
+            }
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * window.innerWidth + 'px';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#3b82f6'][Math.floor(Math.random() * 5)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        function getCSRFToken() {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta && meta.content) {
+                return meta.content;
+            }
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
