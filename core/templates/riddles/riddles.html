@@ -543,9 +543,9 @@
             elements.tip.textContent = riddle.tip || getFallbackTip();
             
             // Add AI indicator if it's an AI-generated riddle
-            if (riddle.is_ai) {
-                elements.riddleText.innerHTML = riddle.question_text + ' <span class="text-xs text-blue-500">(AI Generated)</span>';
-            }
+            // if (riddle.is_ai) {
+            //     elements.riddleText.innerHTML = riddle.question_text + ' <span class="text-xs text-blue-500">(AI Generated)</span>';
+            // }
             
             updateProgress();
             

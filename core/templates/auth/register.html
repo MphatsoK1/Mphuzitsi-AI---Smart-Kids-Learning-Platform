@@ -1,0 +1,311 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Mphunzitsi-AI</title>
+    <meta name="description" content="Sign up to Mphunzitsi-AI - Your personal learning assistant">
+    <meta name="keywords" content="education, AI, learning, Mphunzitsi">
+    <meta name="author" content="Mphunzitsi-AI">
+    <link rel="icon" type="image/png" href="{% static 'favicon/favicon.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+    <meta name="theme-color" content="#ffffff">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.cdnfonts.com/css/poppins" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9fafb;
+            font-size: 14px;
+        }
+        .form-input {
+            border-radius: 10px;
+            padding: 12px 14px;
+            padding-right: 45px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            width: 100%;
+        }
+        .form-input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+            outline: none;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #9ca3af;
+            transition: color 0.2s;
+        }
+        .password-toggle:hover {
+            color: #6b7280;
+        }
+        .password-requirements {
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        .text-sm-sm {
+            font-size: 0.8rem;
+        }
+        .text-xs-sm {
+            font-size: 0.7rem;
+        }
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .btn-loading .btn-text {
+            visibility: hidden;
+        }
+        .spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .input-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center px-3 py-6">
+    <div class="w-full max-w-sm">
+        <!-- Logo/App Name -->
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-4">
+                <div class="w-32 h-32 bg-gradient-to-r from-black-500 to-indigo-600 rounded-2xl flex items-center justify-center">
+                  <img src="{% static 'logo.png'%}" alt="">
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Join the Adventure!</h1>
+            <p class="text-gray-600 mt-2">Create your account and start learning with AI!</p>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="p-3 rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-green-50 text-green-700 border border-green-200{% endif %} text-sm-sm">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Registration Form -->
+        <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+            <form method="post" id="registerForm">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm-sm font-medium mb-2" for="id_username">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Choose Your Username
+                    </label>
+                    <input type="text" name="username" id="id_username" 
+                           class="form-input focus:outline-none focus:ring-2 focus:ring-purple-500"
+                           placeholder="Pick a cool username" required>
+                    {% if form.username.errors %}
+                        <div class="text-red-500 text-xs-sm mt-1">
+                            {{ form.username.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm-sm font-medium mb-2" for="id_email">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        Email Address
+                    </label>
+                    <input type="email" name="email" id="id_email" 
+                           class="form-input focus:outline-none focus:ring-2 focus:ring-purple-500"
+                           placeholder="your.email@example.com" required>
+                    {% if form.email.errors %}
+                        <div class="text-red-500 text-xs-sm mt-1">
+                            {{ form.email.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm-sm font-medium mb-2" for="id_password1">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        Create a Password
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="password" name="password1" id="id_password1" 
+                               class="form-input focus:outline-none focus:ring-2 focus:ring-purple-500"
+                               placeholder="Make it strong!" required>
+                        <span class="password-toggle" onclick="togglePassword('id_password1')">
+                            <svg id="eye-open-id_password1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg id="eye-closed-id_password1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </span>
+                    </div>
+                    {% if form.password1.errors %}
+                        <div class="text-red-500 text-xs-sm mt-1">
+                            {{ form.password1.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="password-requirements bg-purple-50 p-2 rounded mt-2">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Tip: Use at least 8 characters with letters and numbers!
+                    </div>
+                </div>
+                
+                <div class="mb-5">
+                    <label class="block text-gray-700 text-sm-sm font-medium mb-2" for="id_password2">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                        </svg>
+                        Confirm Your Password
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="password" name="password2" id="id_password2" 
+                               class="form-input focus:outline-none focus:ring-2 focus:ring-purple-500"
+                               placeholder="Type it again to be sure" required>
+                        <span class="password-toggle" onclick="togglePassword('id_password2')">
+                            <svg id="eye-open-id_password2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg id="eye-closed-id_password2" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </span>
+                    </div>
+                    {% if form.password2.errors %}
+                        <div class="text-red-500 text-xs-sm mt-1">
+                            {{ form.password2.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm-sm font-medium mb-2" for="id_date_of_birth">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Date of Birth
+                    </label>
+                    <input type="date" name="date_of_birth" id="id_date_of_birth" 
+                           class="form-input focus:outline-none focus:ring-2 focus:ring-purple-500"
+                           placeholder="Select your date of birth" 
+                           value="{{ form.date_of_birth.value|default:'' }}" 
+                           required
+                           max="{{ today_minus_3 }}">
+                    {% if form.date_of_birth.errors %}
+                        <div class="text-red-500 text-xs-sm mt-1">
+                            {{ form.date_of_birth.errors }}
+                        </div>
+                    {% endif %}
+                    <div class="text-gray-600 text-xs-sm mt-1">
+                        We use this to provide age-appropriate games for you!
+                    </div>
+                </div>
+                
+                <button type="submit" id="submitBtn"
+                        class="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold py-3 rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-sm shadow-lg transform hover:scale-[1.02]">
+                    <span class="btn-text">
+                        <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Start Learning Now!
+                    </span>
+                    <div class="spinner" style="display: none;"></div>
+                </button>
+            </form>
+        </div>
+
+        <!-- Google Sign Up -->
+        <div class="mt-4">
+            {% load socialaccount %}
+            <div class="bg-white rounded-xl shadow-sm p-4">
+                <div class="text-center mb-3">
+                    <p class="text-gray-600 text-sm-sm mb-2">Or sign up with</p>
+                </div>
+                <a href="{% provider_login_url 'google' %}?next={% url 'home' %}" 
+                   class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 text-gray-700 font-semibold py-3 rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 text-sm">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    <span>Sign up with Google</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Login Link -->
+        <div class="text-center mt-4">
+            <p class="text-gray-600 text-sm-sm">
+                Already have an account? 
+                <a href="{% url 'login' %}" class="font-medium text-purple-600 hover:text-purple-500 transition-colors">
+                    Sign in here
+                </a>
+            </p>
+        </div>
+    </div>
+</body>
+    <script>
+        // Password visibility toggle
+        function togglePassword(fieldId) {
+            const input = document.getElementById(fieldId);
+            const eyeOpen = document.getElementById('eye-open-' + fieldId);
+            const eyeClosed = document.getElementById('eye-closed-' + fieldId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+            }
+        }
+
+        // Form submission with loading state
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const btn = document.getElementById('submitBtn');
+            const btnText = btn.querySelector('.btn-text');
+            const spinner = btn.querySelector('.spinner');
+            
+            btn.classList.add('btn-loading');
+            spinner.style.display = 'block';
+        });
+    </script>
+</html>

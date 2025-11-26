@@ -1,0 +1,515 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Buddy - Learning App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Load Poppins as primary font, Maria as secondary -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/maria-2" rel="stylesheet">
+  
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  
+  <style>
+    /* Poppins as primary font for body */
+    body {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+    }
+    
+    /* Maria for decorative elements */
+    .font-maria {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+    }
+    
+    /* Poppins for consistent UI */
+    .font-poppins {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+    }
+    
+    /* Typography styles */
+    .heading-primary {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    
+    .heading-secondary {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .btn {
+      font-family: 'Poppins', 'Poppins', sans-serif;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .icon-shadow {
+      box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 
+                  -2px -2px 4px rgba(0, 0, 0, 0.2), 
+                  3px 3px 6px rgba(0, 0, 0, 0.1), 
+                  -3px -3px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .content-container {
+      padding-bottom: 8rem; /* Increased space for input and bubbles */
+    }
+    
+    /* Chat message styling */
+    .message {
+      max-width: 80%;
+      margin-bottom: 1rem;
+      padding: 12px 16px;
+      border-radius: 18px;
+      position: relative;
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .message.user {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+    
+    .message.ai {
+      background: #f1f3f4;
+      color: #333;
+      border-bottom-left-radius: 4px;
+    }
+    
+    .message.ai.typing {
+      background: #e5e7eb;
+      color: #6b7280;
+    }
+    
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+    }
+    
+    .typing-dots {
+      display: inline-flex;
+      margin-left: 8px;
+    }
+    
+    .typing-dots span {
+      height: 8px;
+      width: 8px;
+      background-color: #9ca3af;
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: typing 1.4s infinite ease-in-out;
+    }
+    
+    .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes typing {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+    
+    /* Input area styling */
+    .chat-input-container {
+      transition: all 0.3s ease;
+      transform-origin: bottom;
+    }
+    
+    .chat-input-container:focus-within {
+      transform: scale(1.02);
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+    }
+    
+    .chat-input {
+      resize: none;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+    
+    .chat-input:focus {
+      color: #7c3aed; /* Tailwind purple-600 */
+    }
+    
+    /* Speech bubble buttons */
+    .speech-bubble {
+      position: relative;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 8px 16px;
+      margin: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      animation: bounceIn 0.5s ease-out;
+    }
+    
+    .speech-bubble:hover {
+      transform: scale(1.05);
+      background: #f3e8ff; /* Tailwind purple-100 */
+    }
+    
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 8px solid transparent;
+      border-top-color: #ffffff;
+      transition: all 0.3s ease;
+    }
+    
+    .speech-bubble:hover::after {
+      border-top-color: #f3e8ff;
+    }
+    
+    @keyframes bounceIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      60% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      .heading-primary {
+        font-size: 1.125rem;
+      }
+      .message {
+        max-width: 90%;
+      }
+      .speech-bubble {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-purple-100 via-pink-100 to-blue-100 font-poppins">
+  <div class="content-container overflow-y-auto h-screen p-3">
+    <!-- AI Header -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center">
+        <div class="bg-gradieont-to-r from-purple-500 to-pink-500 w-12 h-12 rounded-full icon-shadow flex items-center justify-center mr-3">
+         <img src="https://assets-v2.lottiefiles.com/a/5b038ad2-4fd1-11ef-8f43-075ce7e78c34/KmGwB3OYAI.gif" class="rounded-full" alt="">
+        </div>
+        <div>
+          <p class="text-purple-600 font-maria font-bold text-base">AI Buddy</p>
+          <p class="text-gray-600 text-xs font-poppins">Your learning friend!</p>
+        </div>
+      </div>
+      
+    </div>
+
+    <!-- Welcome Message -->
+    <div id="welcome-message" class="bg-white p-4 rounded-lg mb-3 border border-gray-200">
+      <div class="flex items-start">
+        <div class="bg-purple-500 w-10 h-10 rounded-full flex items-center justify-center icon-shadow mr-3 flex-shrink-0">
+          <img src="https://static.vecteezy.com/system/resources/previews/055/722/290/non_2x/generate-artificial-intelligence-colorful-stars-app-icon-illustration-vector.jpg" class="rounded-full" alt="">
+        </div>
+        <div class="flex-1">
+          <p class="font-maria text-sm font-bold text-purple-600 mb-1">Hi there! I'm your AI Buddy! 👋</p>
+          <p class="text-xs font-poppins text-gray-600">Ask me anything about animals, colors, numbers, or learning! Try these fun questions below or type your own!</p>
+          <ul class="text-xs font-poppins text-gray-600 mt-2 space-y-1">
+            <li>• What animals eat</li>
+            <li>• How to count numbers</li>
+            <li>• Fun facts about colors</li>
+            <li>• Simple math help</li>
+            <li>• Spelling tips</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div id="chat-messages" class="space-y-3 mb-4 max-h-[60vh] overflow-y-auto">
+      <!-- Messages will be dynamically added here -->
+    </div>
+  </div>
+
+  <!-- Chat Input Area -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-200">
+    <div class="flex items-end space-x-2 mb-3">
+      <div class="chat-input-container flex-1 bg-gray-100 rounded-full p-3 flex items-center border border-purple-300">
+        <i class='bx bx-bot text-purple-500 mr-2'></i>
+        <textarea
+          id="message-input"
+          class="chat-input flex-1 text-sm font-poppins placeholder-gray-500"
+          placeholder="Ask AI Buddy anything... (e.g., What do lions eat?)"
+          rows="1"
+          maxlength="200"
+        ></textarea>
+      </div>
+      <button id="send-button" class="bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-full icon-shadow">
+        <i class='bx bx-send text-lg'></i>
+      </button>
+    </div>
+    <div id="suggestions" class="flex flex-wrap justify-center gap-2">
+      <button class="speech-bubble bg-white text-purple-600 text-xs font-poppins">1+1 = ?</button>
+      <button class="speech-bubble bg-white text-blue-600 text-xs font-poppins">What do cats eat?</button>
+      <button class="speech-bubble bg-white text-green-600 text-xs font-poppins">What color is the sky?</button>
+      <button class="speech-bubble bg-white text-yellow-600 text-xs font-poppins">Spell 'dog'</button>
+    </div>
+  </div>
+  <br>
+  <br>
+  <br>
+  <br>
+
+  <!-- Bottom Navigation -->
+   
+
+  <script>
+    // AI Response patterns for kids - educational and fun
+    const aiResponses = {
+      animals: {
+        'cat|kitten': 'Meow! 🐱 Cats love to eat cat food, fish, and sometimes milk. They say "Meow" and love to play with yarn!',
+        'dog|puppy': 'Woof! 🐶 Dogs eat dog food, meat, and treats. They bark "Woof woof!" and love to fetch balls!',
+        'lion': 'Roar! 🦁 Lions are big cats that live in Africa. They eat meat and are called the "King of the Jungle!"',
+        'fish': '🐟 Fish swim in water and eat fish food or insects. Goldfish live in bowls, but big fish live in oceans!',
+        'bird': 'Tweet tweet! 🐦 Birds eat seeds, worms, and fruits. They can fly high in the sky and build nests!',
+        'elephant': '🐘 Elephants are HUGE! They eat grass, leaves, and fruits with their long trunk. They never forget!',
+        'fly|flies': '🦅 Birds, bats, and butterflies can fly! Butterflies have colorful wings and bees buzz "Bzzz!"',
+        'eat|food': 'Different animals eat different foods! Cats eat fish, dogs eat meat, birds eat seeds, and elephants eat plants!'
+      },
+      numbers: {
+        'count|1|one|2|two': 'Let\'s count together! 1, 2, 3, 4, 5, 6, 7, 8, 9, 10! 🧮 Want to count higher?',
+        'add|plus|1\\+1': 'Adding is fun! 1 + 1 = 2! 🧮 Try asking: What\'s 2 + 3?', // Updated for "1+1 = ?"
+        'subtract|minus': 'Subtracting means taking away! 5 - 2 = 3! ➖ What\'s 10 - 4?'
+      },
+      colors: {
+        'red': '🔴 Red is the color of apples, strawberries, and fire trucks! It\'s a bright, warm color!',
+        'blue|sky.*color': '🔵 Blue is the color of the sky, ocean, and blueberries! It\'s a cool, calming color!',
+        'green': '🟢 Green is the color of grass, leaves, and frogs! It\'s the color of nature!',
+        'yellow': '🟡 Yellow is the color of the sun, bananas, and happy smiley faces! ☀️',
+        'color|colour': 'Colors are everywhere! Red, blue, green, yellow, purple, orange! 🌈 What\'s your favorite color?'
+      },
+      spelling: {
+        'spell|spelling|dog.*spell': 'Spelling helps us write words! DOG is D-O-G! 🐶 Want to spell another animal?',
+        'elephant.*spell': 'Great word! Elephant is spelled E-L-E-P-H-A-N-T! 🐘 It has 8 letters!',
+        'what.*spell': 'Let\'s spell something simple! CAT is C-A-T! 🐱 What word do you want to spell?'
+      },
+      general: {
+        'hi|hello|hey': 'Hello! 👋 I\'m your AI Buddy! I love helping kids learn about animals, numbers, and colors!',
+        'name': 'I\'m AI Buddy! 🤖 Your friendly learning helper. What do you want to learn today?',
+        'help': 'I can help with animals, numbers, colors, and spelling! 🐱🔢🌈 Just ask me anything!',
+        'fun|game': 'Learning is fun! 🎉 Try asking about animals or count with me! What sounds fun to you?',
+        'bye|goodbye': 'Bye bye! 👋 Keep learning and have fun! Come back anytime to chat! 🌟'
+      }
+    };
+
+    // Simulated API responses for demo
+    const demoResponses = [
+      "That's a great question! Let me think... 🤔",
+      "Wow, I love that topic! Here's what I know:",
+      "Learning time! 📚 Let me explain:",
+      "Fun fact! Did you know that..."
+    ];
+
+    let messages = [];
+    const chatMessages = document.getElementById('chat-messages');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const clearButton = document.getElementById('clear-chat');
+    const suggestions = document.getElementById('suggestions');
+
+    // Auto-resize textarea and focus animation
+    messageInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+
+    messageInput.addEventListener('focus', function() {
+      this.parentElement.classList.add('animate-pulse');
+      setTimeout(() => this.parentElement.classList.remove('animate-pulse'), 1000);
+    });
+
+    // Send message
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      // Add user message
+      addMessage(message, 'user');
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+
+      // Show typing indicator
+      showTypingIndicator();
+
+      // Simulate AI response delay
+      setTimeout(() => {
+        hideTypingIndicator();
+        generateAIResponse(message);
+      }, 1500 + Math.random() * 2000); // 1.5-3.5s delay
+    }
+
+    // Add message to chat
+    function addMessage(text, sender) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+      
+      if (sender === 'user') {
+        messageDiv.innerHTML = `
+          <div class="flex justify-end">
+            <div>
+              <p class="text-sm">${text}</p>
+              <p class="text-xs opacity-75 mt-1">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+            </div>
+          </div>
+        `;
+      } else {
+        messageDiv.innerHTML = `
+          <div class="flex items-start">
+            <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+              <i class='bx bxs-robot text-white text-sm'></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-purple-600">AI Buddy</p>
+              <p class="text-sm">${text}</p>
+              <p class="text-xs opacity-75 mt-1">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+            </div>
+          </div>
+        `;
+      }
+      
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      messages.push({ text, sender });
+    }
+
+    // Show typing indicator
+    function showTypingIndicator() {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message ai typing';
+      typingDiv.id = 'typing-indicator';
+      typingDiv.innerHTML = `
+        <div class="flex items-start">
+          <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+            <i class='bx bxs-robot text-white text-sm'></i>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-purple-600">AI Buddy</p>
+            <div class="typing-indicator">
+              <span>Thinking...</span>
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      chatMessages.appendChild(typingDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Hide typing indicator
+    function hideTypingIndicator() {
+      const typing = document.getElementById('typing-indicator');
+      if (typing) typing.remove();
+    }
+
+    // Generate AI response (JavaScript simulation)
+    function generateAIResponse(userMessage) {
+      const lowerMessage = userMessage.toLowerCase();
+      let response = "That's interesting! Tell me more about what you want to learn! 📚";
+
+      // Check response patterns
+      for (const category in aiResponses) {
+        for (const pattern in aiResponses[category]) {
+          if (new RegExp(pattern).test(lowerMessage)) {
+            const responses = aiResponses[category][pattern].split('|');
+            response = responses[Math.floor(Math.random() * responses.length)];
+            break;
+          }
+        }
+        if (response !== "That's interesting!") break;
+      }
+
+      // /* API INTEGRATION - COMMENTED OUT */
+      /*
+      // Simulate API call to AI service
+      fetch('/api/ai-chat/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          category: 'kids-learning',
+          age_group: '5-10'
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        response = data.response || "I'm learning too! Let me get back to you!";
+        addMessage(response, 'ai');
+      })
+      .catch(error => {
+        console.error('AI API error:', error);
+        addMessage("Oops! I'm having trouble connecting. Let's try a fun fact instead! 🐱 Cats sleep 16 hours a day!", 'ai');
+      });
+      */
+      // END API INTEGRATION
+
+      // Add demo delay variation
+      setTimeout(() => {
+        addMessage(response, 'ai');
+      }, 500);
+    }
+
+    // Event listeners
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    clearButton.addEventListener('click', () => {
+      chatMessages.innerHTML = '';
+      messages = [];
+      document.getElementById('welcome-message').style.display = 'block';
+    });
+
+    // Speech bubble buttons
+    suggestions.addEventListener('click', (e) => {
+      if (e.target.classList.contains('speech-bubble')) {
+        messageInput.value = e.target.textContent;
+        sendMessage();
+      }
+    });
+
+    // Hide welcome message after first interaction
+    function hideWelcome() {
+      document.getElementById('welcome-message').style.display = 'none';
+    }
+
+    messageInput.addEventListener('focus', hideWelcome);
+    sendButton.addEventListener('click', hideWelcome);
+
+    // Initialize suggestions visibility
+    suggestions.classList.remove('hidden');
+  </script>
+</body>
+</html>

@@ -1,0 +1,530 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Splash</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .fruit-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .fruit-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .fruit-card.selected {
+            box-shadow: 0 0 0 4px #f59e0b;
+            transform: scale(1.05);
+        }
+        
+        .fruit-card.correct {
+            animation: correctPulse 0.6s ease;
+        }
+        
+        .color-btn {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .color-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .color-btn.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 3px white;
+        }
+        
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.7);
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .timer {
+            font-feature-settings: 'tnum';
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-md mx-auto p-4 sm:p-6 min-h-screen">
+        <!-- Header -->
+        <!-- <div class="flex items-center justify-between mb-4">
+            <button onclick="window.history.back()" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg backdrop-blur-sm transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1 class="text-2xl font-bold text-white">Color Splash</h1>
+            <div class="w-10"></div>
+        </div> -->
+
+        <div class="flex items-center mb-4 sm:mb-6">
+            <a href="{% url 'games_page' %}" class="text-gray-600 hover:text-gray-800 mr-3 sm:mr-4">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-800">Color Splash</h1>
+            <!-- <div class="ml-auto text-sm text-gray-600">
+                Level <span id="current-level">1</span>
+            </div> -->
+        </div>
+
+        <!-- Game Header Card -->
+        <div class="bg-white rounded-2xl shadow-xl p-4 mb-4">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center text-pink-500">
+                    <span class="text-2xl mr-2">🎨</span>
+                    <span class="font-bold">Color Splash</span>
+                </div>
+                <div class="text-sm text-gray-600 timer" id="timer">02:31</div>
+            </div>
+            
+            <!-- Level Progress Bar -->
+            <div class="bg-gradient-to-r from-pink-400 to-purple-500 rounded-xl p-3 flex items-center justify-between text-white">
+                <div class="flex items-center flex-1">
+                    <span class="text-3xl mr-2">🎨</span>
+                    <div>
+                        <div class="font-bold">Paint It Right</div>
+                        <div class="text-xs opacity-90">Choose color, then tap object</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-bold text-2xl" id="level-progress">1/4</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 mb-4 text-center">
+            <p class="text-sm text-gray-700 font-medium">Select a color, then tap an object</p>
+        </div>
+
+        <!-- Game Board -->
+        <div class="bg-white rounded-2xl shadow-xl p-4 mb-4">
+            <div id="game-board" class="grid grid-cols-2 gap-3">
+                <!-- Fruit cards will be generated here -->
+            </div>
+        </div>
+
+        <!-- Color Palette -->
+        <div class="bg-white rounded-2xl shadow-xl p-4 mb-4">
+            <h3 class="font-bold text-gray-800 mb-3 text-center">Color Palette:</h3>
+            <div id="color-palette" class="grid grid-cols-3 gap-2">
+                <!-- Color buttons will be generated here -->
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex gap-3">
+            <button onclick="useHint()" class="flex-1 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition">
+                <span>💡</span>
+                <span>Hint</span>
+            </button>
+            <button onclick="showResetModal()" class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition">
+                <span>🔄</span>
+                <span>Clear</span>
+            </button>
+            <button onclick="toggleSound()" id="sound-btn" class="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition">
+                <span>🔊</span>
+                <span>Sound</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Level Complete Modal -->
+    <div id="complete-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-6xl mb-4 animate-bounce">🎉</div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Level Complete!</h2>
+            <p class="text-gray-600 mb-4">You painted all the objects perfectly!</p>
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 mb-6 border border-purple-200">
+                <div class="text-4xl font-bold text-purple-600 mb-1" id="modal-score">4/4</div>
+                <div class="text-sm text-gray-600">Perfect Score!</div>
+            </div>
+            <button onclick="nextLevel()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-4 rounded-xl font-bold shadow-lg transition text-lg">
+                Continue to Next Level →
+            </button>
+        </div>
+    </div>
+
+    <!-- Reset Modal -->
+    <div id="reset-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="text-5xl mb-4">⚠️</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Reset Level?</h2>
+            <p class="text-gray-600 mb-6">All your progress on this level will be lost.</p>
+            <div class="flex gap-3">
+                <button onclick="hideResetModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-semibold transition">
+                    Cancel
+                </button>
+                <button onclick="confirmReset()" class="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 rounded-xl font-semibold transition">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio elements -->
+    <audio id="bg-music" loop>
+        <source src="{% static 'sounds/sounds.mp3' %}" type="audio/mpeg">
+    </audio>
+    <audio id="success-sound">
+        <source src="{% static 'sounds/yay.mp3' %}" type="audio/mpeg">
+    </audio>
+
+    <script>
+        let currentLevel = 1;
+        let fruits = [];
+        let colors = [];
+        let selectedColor = null;
+        let matchedCount = 0;
+        let requiredMatches = 4;
+        let score = 0;
+        let soundEnabled = true;
+        let hintsUsed = 0;
+        let sessionId = null;
+        let timerInterval = null;
+        let timeElapsed = 0;
+        let bgMusic = document.getElementById('bg-music');
+        let successSound = document.getElementById('success-sound');
+
+        // Generate session ID
+        function generateSessionId() {
+            return 'color_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Get CSRF token
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Start timer
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeElapsed++;
+                document.getElementById('timer').textContent = formatTime(timeElapsed);
+            }, 1000);
+        }
+
+        // Stop timer
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // Load level data
+        async function loadLevel(level) {
+            try {
+                const response = await fetch(`/api/color-level/?level=${level}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                currentLevel = level;
+                fruits = data.fruits;
+                colors = data.colors;
+                requiredMatches = data.required_matches;
+                matchedCount = 0;
+                score = 0;
+                hintsUsed = 0;
+                timeElapsed = 0;
+                selectedColor = null;
+                
+                document.getElementById('level-progress').textContent = `0/${requiredMatches}`;
+                document.getElementById('timer').textContent = '00:00';
+                
+                renderGameBoard();
+                renderColorPalette();
+                startTimer();
+                
+            } catch (error) {
+                console.error('Error loading level:', error);
+                alert('Failed to load level. Please try again.');
+            }
+        }
+
+        // Render game board with fruit cards
+        function renderGameBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+            
+            fruits.forEach((fruit, index) => {
+                const card = document.createElement('div');
+                card.className = 'fruit-card bg-gradient-to-br from-cyan-100 to-blue-100 rounded-xl p-6 flex flex-col items-center justify-center aspect-square';
+                card.dataset.index = index;
+                card.dataset.correctColor = fruit.hex_color;
+                card.dataset.fruitName = fruit.name;
+                
+                card.innerHTML = `
+                    <div class="text-6xl mb-2 grayscale" data-emoji="${fruit.emoji}">${fruit.emoji}</div>
+                `;
+                
+                card.addEventListener('click', () => selectFruit(index));
+                board.appendChild(card);
+            });
+        }
+
+        // Render color palette
+        function renderColorPalette() {
+            const palette = document.getElementById('color-palette');
+            palette.innerHTML = '';
+            
+            colors.forEach((color, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'color-btn rounded-lg py-3 px-4 font-bold text-white shadow-md';
+                btn.style.backgroundColor = color.hex_code;
+                btn.dataset.color = color.hex_code;
+                btn.dataset.colorName = color.name;
+                btn.textContent = color.name;
+                
+                btn.addEventListener('click', () => selectColor(color.hex_code, btn));
+                palette.appendChild(btn);
+            });
+        }
+
+        // Select color from palette
+        function selectColor(colorHex, button) {
+            // Remove previous selection
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Select new color
+            selectedColor = colorHex;
+            button.classList.add('selected');
+            
+            // No click sound - background music is already playing
+        }
+
+        // Select fruit to paint
+        function selectFruit(index) {
+            if (!selectedColor) {
+                showNotification('Please select a color first!', 'warning');
+                return;
+            }
+            
+            const card = document.querySelector(`[data-index="${index}"]`);
+            if (card.classList.contains('correct')) {
+                return; // Already painted
+            }
+            
+            const correctColor = card.dataset.correctColor;
+            const fruitEmoji = card.querySelector('[data-emoji]');
+            
+            if (selectedColor === correctColor) {
+                // Correct match!
+                card.classList.add('correct');
+                fruitEmoji.style.filter = 'none';
+                fruitEmoji.classList.remove('grayscale');
+                card.style.background = `linear-gradient(135deg, ${selectedColor}22, ${selectedColor}44)`;
+                
+                matchedCount++;
+                score += (hintsUsed === 0) ? 100 : 50;
+                
+                document.getElementById('level-progress').textContent = `${matchedCount}/${requiredMatches}`;
+                
+                // Play success sound
+                if (soundEnabled) {
+                    successSound.currentTime = 0;
+                    successSound.play().catch(e => console.log('Success sound failed to play:', e));
+                }
+                
+                showNotification('Perfect! 🎉', 'success');
+                
+                if (matchedCount === requiredMatches) {
+                    stopTimer();
+                    setTimeout(showCompleteModal, 500);
+                }
+            } else {
+                // Wrong color
+                card.classList.add('selected');
+                setTimeout(() => card.classList.remove('selected'), 300);
+                showNotification('Wrong color! Try again', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg font-bold text-white shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                'bg-yellow-500'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 2000);
+        }
+
+        // Use hint
+        function useHint() {
+            const unpainted = Array.from(document.querySelectorAll('.fruit-card:not(.correct)'));
+            if (unpainted.length === 0) return;
+            
+            const randomCard = unpainted[Math.floor(Math.random() * unpainted.length)];
+            const correctColor = randomCard.dataset.correctColor;
+            const fruitName = randomCard.dataset.fruitName;
+            
+            // Find and highlight the correct color button
+            const colorBtn = document.querySelector(`[data-color="${correctColor}"]`);
+            if (colorBtn) {
+                colorBtn.classList.add('selected');
+                selectedColor = correctColor;
+                
+                setTimeout(() => {
+                    colorBtn.classList.remove('selected');
+                }, 2000);
+            }
+            
+            hintsUsed++;
+            showNotification(`Hint: ${fruitName} needs this color!`, 'warning');
+        }
+
+        // Show complete modal
+        function showCompleteModal() {
+            // Play success sound for level completion
+            if (soundEnabled) {
+                successSound.currentTime = 0;
+                successSound.play().catch(e => console.log('Success sound failed to play:', e));
+            }
+            
+            const modal = document.getElementById('complete-modal');
+            document.getElementById('modal-score').textContent = `${matchedCount}/${requiredMatches}`;
+            modal.classList.add('active');
+        }
+
+        // Next level
+        function nextLevel() {
+            document.getElementById('complete-modal').classList.remove('active');
+            loadLevel(currentLevel + 1);
+        }
+
+        // Show reset modal
+        function showResetModal() {
+            document.getElementById('reset-modal').classList.add('active');
+        }
+
+        // Hide reset modal
+        function hideResetModal() {
+            document.getElementById('reset-modal').classList.remove('active');
+        }
+
+        // Confirm reset
+        function confirmReset() {
+            hideResetModal();
+            loadLevel(currentLevel);
+        }
+
+        // Toggle sound
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('sound-btn');
+            
+            if (soundEnabled) {
+                btn.innerHTML = '<span>🔊</span><span>Sound</span>';
+                bgMusic.volume = 0.3;
+                bgMusic.play().catch(e => console.log('Background music failed to play:', e));
+            } else {
+                btn.innerHTML = '<span>🔇</span><span>Sound</span>';
+                bgMusic.pause();
+            }
+        }
+
+        // Initialize game
+        window.addEventListener('DOMContentLoaded', () => {
+            sessionId = generateSessionId();
+            loadLevel(1);
+            
+            // Start background music if sound is enabled
+            if (soundEnabled) {
+                bgMusic.volume = 0.3;
+                bgMusic.play().catch(e => console.log('Autoplay blocked:', e));
+            }
+        });
+
+        // Cleanup on unload
+        window.addEventListener('beforeunload', () => {
+            stopTimer();
+        });
+    </script>
+</body>
+</html>
