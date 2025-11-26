@@ -72,11 +72,11 @@
       {% endif %}
 
       <!-- Hidden field to store selected avatar -->
-      <input type="hidden" name="selected_avatar" id="selected_avatar" value="{{ form.selected_avatar.value|default:'58509039_9439767' }}">
+      <input type="hidden" name="selected_avatar" id="selected_avatar" value="{{ form.selected_avatar.value|default:'1' }}">
 
       <!-- Current Selected Avatar Preview -->
       <div class="flex justify-center mb-6">
-        <img src="{% static 'avatars/' %}{{ form.selected_avatar.value|default:'58509039_9439767' }}.jpg" 
+        <img src="{% static 'avatars/' %}{{ form.selected_avatar.value|default:'1' }}.svg" 
              alt="Selected Avatar" 
              class="avatar-large selected" 
              id="preview-avatar">
@@ -123,10 +123,10 @@
                    value="{{ avatar_id }}" 
                    id="avatar_{{ avatar_id }}"
                    class="hidden"
-                   {% if form.selected_avatar.value == avatar_id or avatar_id == "58509039_9439767" and not form.selected_avatar.value %}checked{% endif %}>
-            <img src="{% static 'avatars/' %}{{ avatar_id }}.jpg" 
+                   {% if form.selected_avatar.value == avatar_id or avatar_id == "1" and not form.selected_avatar.value %}checked{% endif %}>
+            <img src="{% static 'avatars/' %}{{ avatar_id }}.svg" 
                  alt="{{ avatar_name }}" 
-                 class="avatar-small {% if form.selected_avatar.value == avatar_id or avatar_id == '58509039_9439767' and not form.selected_avatar.value %}selected{% endif %}"
+                 class="avatar-small {% if form.selected_avatar.value == avatar_id or avatar_id == '1' and not form.selected_avatar.value %}selected{% endif %}"
                  data-avatar-id="{{ avatar_id }}">
           </label>
         {% endfor %}
@@ -165,7 +165,7 @@
             const avatarImg = this.nextElementSibling;
             
             // Update preview
-            previewAvatar.src = `/static/avatars/${avatarId}.jpg`;
+            previewAvatar.src = `/static/avatars/${avatarId}.svg`;
             previewAvatar.classList.add('selected');
             
             // Update hidden field

@@ -24,10 +24,10 @@ class UserProfile(models.Model):
         if self.avatar:
             return self.avatar.url
         elif self.preset_avatar:
-            # Avatars are stored as .jpg files
-            return f'/static/avatars/{self.preset_avatar}.jpg'
+            # Avatars are stored as .svg files
+            return f'/static/avatars/{self.preset_avatar}.svg'
         # Default fallback - use first available avatar or a placeholder
-        return '/static/avatars/58509039_9439767.jpg'
+        return '/static/avatars/1.svg'
     
     from datetime import date
 

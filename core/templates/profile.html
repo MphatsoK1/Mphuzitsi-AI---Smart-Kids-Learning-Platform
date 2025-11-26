@@ -286,14 +286,14 @@
                     <div class="grid grid-cols-4 gap-3">
                         {% for value, label in edit_profile_form.selected_avatar.field.choices %}
                         <div class="avatar-option cursor-pointer" data-avatar="{{ value }}">
-                            <img src="{% static 'avatars/' %}{{ value }}.jpg" 
+                            <img src="{% static 'avatars/' %}{{ value }}.svg" 
                                  alt="{{ label }}" 
                                  class="w-full rounded-full border-2 border-gray-300 hover:border-blue-500 transition"
                                  onclick="selectAvatar('{{ value }}')">
                         </div>
                         {% endfor %}
                     </div>
-                    <input type="hidden" name="selected_avatar" id="selected_avatar_input" value="{{ user.profile.preset_avatar|default:'58509039_9439767' }}">
+                    <input type="hidden" name="selected_avatar" id="selected_avatar_input" value="{{ user.profile.preset_avatar|default:'1' }}">
                     <div id="selected_avatar_errors" class="text-red-500 text-xs mt-1"></div>
                 </div>
                 

@@ -78,8 +78,11 @@
       <div class="flex items-center">
         <i class='bx bx-graduation text-gray-600 text-2xl mr-2'></i>
         <a href="{% url 'profile' %}" class="flex items-center">
-        <img src="{% static 'avatars/58509042_9439833.jpg'%}" alt="Profile" class="rounded-full mr-2" style="width: 40px;">
+        <img src="{{ user.profile.get_avatar_url }}" alt="Profile" class="rounded-full mr-2" style="width: 40px;">
         </a>
+        <!-- <div class="w-16 h-16 rounded-full overflow-hidden mr-3">
+          <img src="{{ user.profile.get_avatar_url }}" alt="Profile" class="w-full h-full object-cover">
+      </div> -->
         <div>
           <p class="text-red-500 font-maria font-bold text-base">Hello, {{user.username}} 👋🏻</p>
           <p class="text-gray-600 text-xs font-poppins">Choose what you want to learn today</p>

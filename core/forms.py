@@ -59,14 +59,14 @@ class RegisterForm(forms.Form):
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'required': True})
     )
 
-    date_of_birth = forms.DateField(
-        label="Date of Birth",
-        widget=forms.DateInput(attrs={
-            'class': 'form-control',
-            'type': 'date',
-            'required': True
-        })
-    )
+    # date_of_birth = forms.DateField(
+    #     label="Date of Birth",
+    #     widget=forms.DateInput(attrs={
+    #         'class': 'form-control',
+    #         'type': 'date',
+    #         'required': True
+    #     })
+    # )
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -98,7 +98,7 @@ class RegisterForm(forms.Form):
         # Update the profile created by the signal with DOB
         # The signal automatically creates a profile, so we update it instead of creating a new one
         profile, created = UserProfile.objects.get_or_create(user=user)
-        profile.date_of_birth = self.cleaned_data['date_of_birth']
+        # profile.date_of_birth = self.cleaned_data['date_of_birth']
         profile.save()
 
         return user
@@ -106,10 +106,10 @@ class RegisterForm(forms.Form):
 class ProfileSetupForm(forms.ModelForm):
     # Define choices for preset avatars (matching the template's avatar IDs)
     AVATAR_CHOICES = [
-        ('58509039_9439767', 'avatar1'),
-        ('58509042_9439833', 'avatar2'),
-        ('58509054_9441186', 'avatar3'),
-        ('58509040_9434650', 'avatar4'),
+        ('1', 'avatar1'),
+        ('2', 'avatar2'),
+        ('3', 'avatar3'),
+        ('4', 'avatar4'),
     ]
 
     selected_avatar = forms.ChoiceField(
@@ -254,10 +254,10 @@ class EditProfileForm(forms.ModelForm):
     
     # Avatar choices
     AVATAR_CHOICES = [
-        ('58509039_9439767', 'avatar1'),
-        ('58509042_9439833', 'avatar2'),
-        ('58509054_9441186', 'avatar3'),
-        ('58509040_9434650', 'avatar4'),
+        ('1', 'avatar1'),
+        ('2', 'avatar2'),
+        ('3', 'avatar3'),
+        ('4', 'avatar4'),
     ]
     
     selected_avatar = forms.ChoiceField(
