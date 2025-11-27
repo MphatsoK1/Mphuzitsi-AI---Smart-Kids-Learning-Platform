@@ -9358,3 +9358,111 @@ Not Found: /.well-known/appspecific/com.chrome.devtools.json
 "GET /home/ HTTP/1.1" 200 15080
 Not Found: /.well-known/appspecific/com.chrome.devtools.json
 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 13794
+Watching for file changes with StatReloader
+"GET / HTTP/1.1" 200 7326
+"GET /static/logo1.png HTTP/1.1" 304 0
+"GET /static/wel.png HTTP/1.1" 304 0
+"GET /static/geek-pride-day-concept-with-game-controller.png HTTP/1.1" 304 0
+"GET /static/winner-background-rendering.png HTTP/1.1" 304 0
+"GET /login/ HTTP/1.1" 200 15098
+"GET /static/logo.png HTTP/1.1" 304 0
+"GET /static/manifest.json HTTP/1.1" 304 0
+"GET /static/favicon/android-chrome-192x192.png HTTP/1.1" 304 0
+"GET /accounts/google/login/?next=/home/ HTTP/1.1" 200 3107
+"GET /accounts/login/ HTTP/1.1" 200 8695
+"GET /accounts/google/login/?process=login HTTP/1.1" 200 3107
+"POST /accounts/google/login/?process=login HTTP/1.1" 302 0
+"GET /accounts/google/login/callback/?state=s8Zj9ALzXndzqKZa&code=4%2F0Ab32j92lWfKrg7YpniB3CY52z2_Qh7nCVbsK79NVVxiNwbilXNqDgoK6xTeyLBdn_SwSaQ&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid&authuser=0&prompt=none HTTP/1.1" 302 0
+"GET /home/ HTTP/1.1" 200 15080
+"GET /static/Untitled-1.png HTTP/1.1" 304 0
+"GET /profile/ HTTP/1.1" 200 23553
+"GET /home/ HTTP/1.1" 200 15080
+"GET /riddles/ HTTP/1.1" 200 38628
+"GET /static/sounds/sounds.mp3 HTTP/1.1" 304 0
+"POST /api/riddles/start/ HTTP/1.1" 200 112
+"GET /api/riddles/level/?level=1 HTTP/1.1" 200 1789
+"GET /games-page/ HTTP/1.1" 200 14894
+"GET /quizes/ HTTP/1.1" 200 31700
+"POST /api/quizes/start-session/ HTTP/1.1" 200 107
+"GET /api/get-next-question/ HTTP/1.1" 200 116
+"GET /api/quizes/level/?level=1 HTTP/1.1" 200 1677
+"GET /quizes/ HTTP/1.1" 200 31700
+"POST /api/quizes/start-session/ HTTP/1.1" 200 107
+"GET /api/get-next-question/ HTTP/1.1" 200 116
+"GET /api/quizes/level/?level=1 HTTP/1.1" 200 1677
+"GET /quizes/ HTTP/1.1" 200 31700
+"POST /api/quizes/start-session/ HTTP/1.1" 200 107
+"GET /api/get-next-question/ HTTP/1.1" 200 116
+"GET /api/quizes/level/?level=1 HTTP/1.1" 200 1677
+Watching for file changes with StatReloader
+"GET / HTTP/1.1" 200 7326
+"GET /static/logo1.png HTTP/1.1" 304 0
+"GET /static/wel.png HTTP/1.1" 304 0
+"GET /static/geek-pride-day-concept-with-game-controller.png HTTP/1.1" 304 0
+"GET /static/winner-background-rendering.png HTTP/1.1" 304 0
+"GET /login/ HTTP/1.1" 200 15098
+"GET /static/logo.png HTTP/1.1" 304 0
+"GET /static/manifest.json HTTP/1.1" 304 0
+"GET /static/favicon/android-chrome-192x192.png HTTP/1.1" 304 0
+"GET /accounts/google/login/?next=/home/ HTTP/1.1" 200 3107
+"POST /accounts/google/login/?next=/home/ HTTP/1.1" 302 0
+"GET /accounts/google/login/callback/?state=tpuLDeieHTioenqO&code=4%2F0Ab32j90or8uT0HfzNtLG3j6YW5_zOKrVZL1XD1bABPGhyPYizEyLoCPRxeXcWaERhLjB8w&scope=email+profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&authuser=0&prompt=none HTTP/1.1" 302 0
+"GET /home/ HTTP/1.1" 200 15080
+"GET /static/Untitled-1.png HTTP/1.1" 304 0
+"GET /riddles/ HTTP/1.1" 200 38628
+"POST /api/riddles/start/ HTTP/1.1" 200 112
+"GET /api/riddles/level/?level=1 HTTP/1.1" 200 2641
+- Broken pipe from ('127.0.0.1', 52801)
+"GET /riddles/ HTTP/1.1" 200 38628
+"POST /api/riddles/start/ HTTP/1.1" 200 112
+"GET /api/riddles/level/?level=1 HTTP/1.1" 200 2587
+"GET /home/ HTTP/1.1" 200 15080
+- Broken pipe from ('127.0.0.1', 59745)
+"GET /riddles/ HTTP/1.1" 200 38628
+"POST /api/riddles/start/ HTTP/1.1" 200 112
+"GET /api/riddles/level/?level=1 HTTP/1.1" 200 2397
+"GET /home/ HTTP/1.1" 200 15080
+- Broken pipe from ('127.0.0.1', 57444)
+"GET /quizes/ HTTP/1.1" 200 31700
+"POST /api/quizes/start-session/ HTTP/1.1" 200 107
+"GET /api/get-next-question/ HTTP/1.1" 200 570
+"GET /api/quizes/level/?level=1 HTTP/1.1" 200 2095
+"GET /home/ HTTP/1.1" 200 15080
+- Broken pipe from ('127.0.0.1', 51237)
+"GET /profile/ HTTP/1.1" 200 23553
+"GET /home/ HTTP/1.1" 200 15080
+Watching for file changes with StatReloader
+"GET /profile/ HTTP/1.1" 200 37896
+"POST /profile/ HTTP/1.1" 200 61
+"GET /profile/ HTTP/1.1" 200 37898
+"GET /static/favicon/favicon-32x32.png HTTP/1.1" 304 0
+Bad Request: /profile/
+"POST /profile/ HTTP/1.1" 400 107
+"GET /home/ HTTP/1.1" 200 15082
+"GET /static/Untitled-1.png HTTP/1.1" 304 0
+"GET /riddles/ HTTP/1.1" 200 38628
+"POST /api/riddles/start/ HTTP/1.1" 200 112
+"GET /api/riddles/level/?level=1 HTTP/1.1" 200 2426
+"GET /games-page/ HTTP/1.1" 200 14894
+- Broken pipe from ('127.0.0.1', 55197)
+"GET /quizes/ HTTP/1.1" 200 31700
+"POST /api/quizes/start-session/ HTTP/1.1" 200 107
+"GET /api/get-next-question/ HTTP/1.1" 200 288
+"GET /api/quizes/level/?level=1 HTTP/1.1" 200 2324
+"GET /games-page/ HTTP/1.1" 200 14894
+- Broken pipe from ('127.0.0.1', 63310)
+"GET /riddles/ HTTP/1.1" 200 38628
+"POST /api/riddles/start/ HTTP/1.1" 200 112
+"GET /api/riddles/level/?level=1 HTTP/1.1" 200 2839
+"GET /games-page/ HTTP/1.1" 200 14894
+- Broken pipe from ('127.0.0.1', 58389)
+Watching for file changes with StatReloader
+"GET /riddles/ HTTP/1.1" 200 38628
+"POST /api/riddles/start/ HTTP/1.1" 200 112
+"GET /api/riddles/level/?level=1 HTTP/1.1" 200 2334
+"GET /games-page/ HTTP/1.1" 200 14894
+- Broken pipe from ('127.0.0.1', 60310)
+"GET /home/ HTTP/1.1" 200 15082
+"GET /static/Untitled-1.png HTTP/1.1" 304 0
+"GET /profile/ HTTP/1.1" 200 37898
+"GET /home/ HTTP/1.1" 200 15082

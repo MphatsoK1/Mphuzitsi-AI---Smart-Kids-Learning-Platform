@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from datetime import date
 from .models import *
 
 class LoginForm(forms.Form):
@@ -104,12 +105,13 @@ class RegisterForm(forms.Form):
         return user
 
 class ProfileSetupForm(forms.ModelForm):
-    # Define choices for preset avatars (matching the template's avatar IDs)
+    # Define choices for preset avatars (all 20 avatars)
     AVATAR_CHOICES = [
-        ('1', 'avatar1'),
-        ('2', 'avatar2'),
-        ('3', 'avatar3'),
-        ('4', 'avatar4'),
+        ('1', 'avatar1'), ('2', 'avatar2'), ('3', 'avatar3'), ('4', 'avatar4'),
+        ('5', 'avatar5'), ('6', 'avatar6'), ('7', 'avatar7'), ('8', 'avatar8'),
+        ('9', 'avatar9'), ('10', 'avatar10'), ('11', 'avatar11'), ('12', 'avatar12'),
+        ('13', 'avatar13'), ('14', 'avatar14'), ('15', 'avatar15'), ('16', 'avatar16'),
+        ('17', 'avatar17'), ('18', 'avatar18'), ('19', 'avatar19'), ('20', 'avatar20'),
     ]
 
     selected_avatar = forms.ChoiceField(
@@ -142,6 +144,23 @@ class ProfileSetupForm(forms.ModelForm):
         #If profile doesn't have date_of_birth, make it required
         if instance and not instance.date_of_birth:
             self.fields['date_of_birth'].required = True
+
+    def clean_date_of_birth(self):
+        """Validate date of birth - must be at least 3 years old"""
+        date_of_birth = self.cleaned_data.get('date_of_birth')
+        if date_of_birth:
+            today = date.today()
+            age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+            
+            # Validate minimum age (3 years)
+            if age < 3:
+                raise ValidationError("You must be at least 3 years old to use this platform.")
+            
+            # Validate maximum age (e.g., 100 years for reasonable limit)
+            if age > 100:
+                raise ValidationError("Please enter a valid date of birth.")
+        
+        return date_of_birth
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -252,12 +271,13 @@ class EditProfileForm(forms.ModelForm):
         required=False
     )
     
-    # Avatar choices
+    # Avatar choices (all 20 avatars)
     AVATAR_CHOICES = [
-        ('1', 'avatar1'),
-        ('2', 'avatar2'),
-        ('3', 'avatar3'),
-        ('4', 'avatar4'),
+        ('1', 'avatar1'), ('2', 'avatar2'), ('3', 'avatar3'), ('4', 'avatar4'),
+        ('5', 'avatar5'), ('6', 'avatar6'), ('7', 'avatar7'), ('8', 'avatar8'),
+        ('9', 'avatar9'), ('10', 'avatar10'), ('11', 'avatar11'), ('12', 'avatar12'),
+        ('13', 'avatar13'), ('14', 'avatar14'), ('15', 'avatar15'), ('16', 'avatar16'),
+        ('17', 'avatar17'), ('18', 'avatar18'), ('19', 'avatar19'), ('20', 'avatar20'),
     ]
     
     selected_avatar = forms.ChoiceField(
@@ -305,6 +325,23 @@ class EditProfileForm(forms.ModelForm):
             if User.objects.filter(email=email).exclude(pk=self.user.pk).exists():
                 raise ValidationError("This email is already taken. Please choose another.")
         return email
+    
+    def clean_date_of_birth(self):
+        """Validate date of birth - must be at least 3 years old"""
+        date_of_birth = self.cleaned_data.get('date_of_birth')
+        if date_of_birth:
+            today = date.today()
+            age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+            
+            # Validate minimum age (3 years)
+            if age < 3:
+                raise ValidationError("You must be at least 3 years old to use this platform.")
+            
+            # Validate maximum age (e.g., 100 years for reasonable limit)
+            if age > 100:
+                raise ValidationError("Please enter a valid date of birth.")
+        
+        return date_of_birth
     
     def save(self, commit=True):
         instance = super().save(commit=False)

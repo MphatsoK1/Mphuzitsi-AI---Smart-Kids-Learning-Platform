@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ov&1)v)a^x0*n10sud(956#8ly^@91i!e^4%(oamz*0*rru1k='
 
 
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "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"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

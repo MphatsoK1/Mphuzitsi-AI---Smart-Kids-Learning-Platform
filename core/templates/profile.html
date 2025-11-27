@@ -283,15 +283,40 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Avatar
                     </label>
-                    <div class="grid grid-cols-4 gap-3">
-                        {% for value, label in edit_profile_form.selected_avatar.field.choices %}
-                        <div class="avatar-option cursor-pointer" data-avatar="{{ value }}">
-                            <img src="{% static 'avatars/' %}{{ value }}.svg" 
-                                 alt="{{ label }}" 
-                                 class="w-full rounded-full border-2 border-gray-300 hover:border-blue-500 transition"
-                                 onclick="selectAvatar('{{ value }}')">
+                    <div class="flex items-center justify-center gap-2">
+                        <!-- Backward Arrow -->
+                        <button type="button" 
+                                id="profile-avatar-prev" 
+                                class="p-2 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                aria-label="Previous avatars">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Avatar Container (shows 4 at a time) -->
+                        <div class="grid grid-cols-4 gap-3 flex-1" id="profile-avatar-container">
+                            {% for value, label in edit_profile_form.selected_avatar.field.choices %}
+                            <div class="avatar-option cursor-pointer profile-avatar-item {% if forloop.counter0 >= 4 %}hidden{% endif %}" 
+                                 data-avatar="{{ value }}" 
+                                 data-avatar-index="{{ forloop.counter0 }}">
+                                <img src="{% static 'avatars/' %}{{ value }}.svg" 
+                                     alt="{{ label }}" 
+                                     class="w-full rounded-full border-2 {% if user.profile.preset_avatar == value or value == '1' and not user.profile.preset_avatar %}border-blue-500{% else %}border-gray-300{% endif %} hover:border-blue-500 transition"
+                                     onclick="selectAvatar('{{ value }}')">
+                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+                        
+                        <!-- Forward Arrow -->
+                        <button type="button" 
+                                id="profile-avatar-next" 
+                                class="p-2 rounded-full hover:bg-gray-100 transition-colors {% if edit_profile_form.selected_avatar.field.choices|length <= 4 %}hidden{% endif %}"
+                                aria-label="Next avatars">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
                     </div>
                     <input type="hidden" name="selected_avatar" id="selected_avatar_input" value="{{ user.profile.preset_avatar|default:'1' }}">
                     <div id="selected_avatar_errors" class="text-red-500 text-xs mt-1"></div>
@@ -351,6 +376,10 @@
                     img.classList.add('border-blue-500');
                 }
             });
+            // Reset avatar navigation to first page
+            if (window.resetProfileAvatarNavigation) {
+                window.resetProfileAvatarNavigation();
+            }
         }
         
         function hideEditProfileModal() {
@@ -372,6 +401,67 @@
                 }
             });
         }
+        
+        // Avatar Navigation for Profile Edit Modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileAvatarItems = document.querySelectorAll('.profile-avatar-item');
+            const profilePrevButton = document.getElementById('profile-avatar-prev');
+            const profileNextButton = document.getElementById('profile-avatar-next');
+            
+            if (profileAvatarItems.length > 0 && profilePrevButton && profileNextButton) {
+                let currentProfilePage = 0;
+                const avatarsPerPage = 4;
+                const totalAvatars = profileAvatarItems.length;
+                const totalPages = Math.ceil(totalAvatars / avatarsPerPage);
+
+                // Function to show/hide avatars based on current page
+                function updateProfileAvatarDisplay() {
+                    profileAvatarItems.forEach((item, index) => {
+                        const startIndex = currentProfilePage * avatarsPerPage;
+                        const endIndex = startIndex + avatarsPerPage;
+                        
+                        if (index >= startIndex && index < endIndex) {
+                            item.classList.remove('hidden');
+                        } else {
+                            item.classList.add('hidden');
+                        }
+                    });
+
+                    // Update navigation buttons
+                    profilePrevButton.disabled = currentProfilePage === 0;
+                    if (totalPages <= 1) {
+                        profileNextButton.classList.add('hidden');
+                    } else {
+                        profileNextButton.classList.remove('hidden');
+                        profileNextButton.disabled = currentProfilePage >= totalPages - 1;
+                    }
+                }
+
+                // Navigation handlers
+                profilePrevButton.addEventListener('click', function() {
+                    if (currentProfilePage > 0) {
+                        currentProfilePage--;
+                        updateProfileAvatarDisplay();
+                    }
+                });
+
+                profileNextButton.addEventListener('click', function() {
+                    if (currentProfilePage < totalPages - 1) {
+                        currentProfilePage++;
+                        updateProfileAvatarDisplay();
+                    }
+                });
+
+                // Function to reset navigation (called when modal opens)
+                window.resetProfileAvatarNavigation = function() {
+                    currentProfilePage = 0;
+                    updateProfileAvatarDisplay();
+                };
+                
+                // Initialize display
+                updateProfileAvatarDisplay();
+            }
+        });
         
         // Handle Change Password Form Submission
         document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {

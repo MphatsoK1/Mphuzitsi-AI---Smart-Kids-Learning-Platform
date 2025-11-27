@@ -114,22 +114,48 @@
       </div>
       {% endif %}
 
-      <!-- Avatar Selection Grid -->
-      <div class="flex justify-center space-x-3 mb-8 flex-wrap gap-3">
-        {% for avatar_id, avatar_name in form.fields.selected_avatar.choices %}
-          <label class="cursor-pointer">
-            <input type="radio" 
-                   name="avatar_option" 
-                   value="{{ avatar_id }}" 
-                   id="avatar_{{ avatar_id }}"
-                   class="hidden"
-                   {% if form.selected_avatar.value == avatar_id or avatar_id == "1" and not form.selected_avatar.value %}checked{% endif %}>
-            <img src="{% static 'avatars/' %}{{ avatar_id }}.svg" 
-                 alt="{{ avatar_name }}" 
-                 class="avatar-small {% if form.selected_avatar.value == avatar_id or avatar_id == '1' and not form.selected_avatar.value %}selected{% endif %}"
-                 data-avatar-id="{{ avatar_id }}">
-          </label>
-        {% endfor %}
+      <!-- Avatar Selection Grid with Navigation -->
+      <div class="mb-8">
+        <div class="flex items-center justify-center gap-2">
+          <!-- Backward Arrow -->
+          <button type="button" 
+                  id="avatar-prev" 
+                  class="p-2 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Previous avatars">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          
+          <!-- Avatar Container (shows 4 at a time) -->
+          <div class="flex justify-center space-x-3 gap-3" id="avatar-container">
+            {% for avatar_id, avatar_name in form.fields.selected_avatar.choices %}
+              <label class="cursor-pointer avatar-item {% if forloop.counter0 >= 4 %}hidden{% endif %}" 
+                     data-avatar-index="{{ forloop.counter0 }}">
+                <input type="radio" 
+                       name="avatar_option" 
+                       value="{{ avatar_id }}" 
+                       id="avatar_{{ avatar_id }}"
+                       class="hidden"
+                       {% if form.selected_avatar.value == avatar_id or avatar_id == "1" and not form.selected_avatar.value %}checked{% endif %}>
+                <img src="{% static 'avatars/' %}{{ avatar_id }}.svg" 
+                     alt="{{ avatar_name }}" 
+                     class="avatar-small {% if form.selected_avatar.value == avatar_id or avatar_id == '1' and not form.selected_avatar.value %}selected{% endif %}"
+                     data-avatar-id="{{ avatar_id }}">
+              </label>
+            {% endfor %}
+          </div>
+          
+          <!-- Forward Arrow -->
+          <button type="button" 
+                  id="avatar-next" 
+                  class="p-2 rounded-full hover:bg-gray-100 transition-colors {% if form.fields.selected_avatar.choices|length <= 4 %}hidden{% endif %}"
+                  aria-label="Next avatars">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Avatar field errors -->
@@ -157,7 +183,54 @@
       const avatarRadios = document.querySelectorAll('input[name="avatar_option"]');
       const previewAvatar = document.getElementById('preview-avatar');
       const hiddenAvatarField = document.getElementById('selected_avatar');
+      const avatarItems = document.querySelectorAll('.avatar-item');
+      const prevButton = document.getElementById('avatar-prev');
+      const nextButton = document.getElementById('avatar-next');
+      
+      let currentPage = 0;
+      const avatarsPerPage = 4;
+      const totalAvatars = avatarItems.length;
+      const totalPages = Math.ceil(totalAvatars / avatarsPerPage);
 
+      // Function to show/hide avatars based on current page
+      function updateAvatarDisplay() {
+        avatarItems.forEach((item, index) => {
+          const startIndex = currentPage * avatarsPerPage;
+          const endIndex = startIndex + avatarsPerPage;
+          
+          if (index >= startIndex && index < endIndex) {
+            item.classList.remove('hidden');
+          } else {
+            item.classList.add('hidden');
+          }
+        });
+
+        // Update navigation buttons
+        prevButton.disabled = currentPage === 0;
+        if (totalPages <= 1) {
+          nextButton.classList.add('hidden');
+        } else {
+          nextButton.classList.remove('hidden');
+          nextButton.disabled = currentPage >= totalPages - 1;
+        }
+      }
+
+      // Navigation handlers
+      prevButton.addEventListener('click', function() {
+        if (currentPage > 0) {
+          currentPage--;
+          updateAvatarDisplay();
+        }
+      });
+
+      nextButton.addEventListener('click', function() {
+        if (currentPage < totalPages - 1) {
+          currentPage++;
+          updateAvatarDisplay();
+        }
+      });
+
+      // Avatar selection handlers
       avatarRadios.forEach(radio => {
         radio.addEventListener('change', function() {
           if (this.checked) {
@@ -189,6 +262,9 @@
           firstRadio.dispatchEvent(new Event('change'));
         }
       }
+
+      // Initialize display
+      updateAvatarDisplay();
     });
   </script>
 </body>
