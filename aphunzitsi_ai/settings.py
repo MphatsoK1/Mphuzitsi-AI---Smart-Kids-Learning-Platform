@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ov&1)v)a^x0*n10sud(956#8ly^@91i!e^4%(oamz*0*rru1k='
+SECRET_KEY = ''
 
 
 GROQ_API_KEY = ""
